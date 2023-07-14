@@ -2,11 +2,9 @@ import { FastifyInstance } from 'fastify';
 import {
   GraphQLFloat,
   GraphQLID,
-  GraphQLInputObjectType,
   GraphQLList,
   GraphQLNonNull,
   GraphQLObjectType,
-  GraphQLScalarType,
   GraphQLString,
 } from 'graphql';
 
@@ -38,7 +36,7 @@ const userType = new GraphQLObjectType({
       type: GraphQLString,
     },
     balance: {
-      type: new GraphQLScalarType(GraphQLFloat),
+      type: GraphQLFloat,
     },
   },
 });
@@ -55,7 +53,7 @@ const createUserArgs = {
     type: new GraphQLNonNull(GraphQLString),
   },
   balance: {
-    type: new GraphQLNonNull(new GraphQLScalarType(GraphQLFloat)),
+    type: new GraphQLNonNull(GraphQLFloat),
   },
 };
 
@@ -67,7 +65,7 @@ const updateUserArgs = {
     type: GraphQLString,
   },
   balance: {
-    type: new GraphQLScalarType(GraphQLFloat),
+    type: GraphQLFloat,
   },
 };
 

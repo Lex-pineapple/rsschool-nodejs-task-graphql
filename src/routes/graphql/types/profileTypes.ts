@@ -6,7 +6,6 @@ import {
   GraphQLList,
   GraphQLNonNull,
   GraphQLObjectType,
-  GraphQLScalarType,
   GraphQLString,
 } from 'graphql';
 
@@ -41,7 +40,7 @@ const profileType = new GraphQLObjectType({
       type: GraphQLBoolean,
     },
     yearOfBirth: {
-      type: new GraphQLScalarType(GraphQLInt),
+      type: GraphQLInt,
     },
     userId: {
       // TODO: Check later
@@ -70,7 +69,7 @@ const createProfileArgs = {
     type: new GraphQLNonNull(GraphQLBoolean),
   },
   yearOfBirth: {
-    type: new GraphQLNonNull(new GraphQLScalarType(GraphQLInt)),
+    type: new GraphQLNonNull(GraphQLInt),
   },
   userId: {
     // TODO: Check later
@@ -90,7 +89,7 @@ const updateProfileArgs = {
     type: new GraphQLNonNull(GraphQLBoolean),
   },
   yearOfBirth: {
-    type: new GraphQLNonNull(new GraphQLScalarType(GraphQLInt)),
+    type: new GraphQLNonNull(GraphQLInt),
   },
   userId: {
     // TODO: Check later
