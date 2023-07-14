@@ -8,20 +8,29 @@ import {
 } from '@prisma/client/runtime/library.js';
 import { HttpCompatibleError } from './handle-http-error.js';
 import { HttpErrorCodes } from '@fastify/sensible/lib/httpError.js';
+import { Static } from '@sinclair/typebox';
+import { prismaStatsSchema } from '../routes/stats/schemas.js';
 
 export default fp(async (fastify) => {
   const prisma = new PrismaClient({
     log: ['warn', 'error'],
   }).$extends({
     query: {
-      $allOperations: ({ args, query }) => {
-        fastify.prismaCallsCount += 1;
+      $allOperations: ({ model = '', operation, args, query }) => {
+        fastify.prismaStats.operationHistory.push({
+          model,
+          operation,
+          // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+          args,
+        });
         return query(args).catch(handlePrismaError);
       },
     },
   }) as PrismaClient;
 
-  fastify.decorate('prismaCallsCount', 0);
+  fastify.decorate('prismaStats', {
+    operationHistory: [],
+  });
   fastify.decorate('prisma', prisma);
 });
 
@@ -76,6 +85,6 @@ function handlePrismaError(error: unknown) {
 declare module 'fastify' {
   export interface FastifyInstance {
     prisma: PrismaClient;
-    prismaCallsCount: number;
+    prismaStats: Static<typeof prismaStatsSchema>;
   }
 }

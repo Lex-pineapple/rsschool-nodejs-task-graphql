@@ -1,17 +1,6 @@
-import { randomInt, randomUUID } from 'node:crypto';
 import { test } from 'tap';
 import { build } from '../helper.js';
-import {
-  createPost,
-  createProfile,
-  createUser,
-  getPost,
-  getProfile,
-  getUser,
-  gqlQuery,
-  subscribeTo,
-  subscribedToUser,
-} from '../utils/requests.js';
+import { createUser, gqlQuery, subscribeTo } from '../utils/requests.js';
 
 await test('gql-rule', async (t) => {
   const app = await build(t);
@@ -33,7 +22,6 @@ await test('gql-rule', async (t) => {
 
     const {
       body: { errors },
-      res,
     } = await gqlQuery(app, {
       query: `query ($userId: UUID!) {
         user(id: $userId) {
