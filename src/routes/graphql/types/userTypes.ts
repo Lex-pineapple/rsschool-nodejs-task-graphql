@@ -1,12 +1,14 @@
-import { FastifyInstance } from 'fastify';
+import fastify, { FastifyInstance } from 'fastify';
 import {
   GraphQLFloat,
-  GraphQLID,
   GraphQLList,
   GraphQLNonNull,
   GraphQLObjectType,
   GraphQLString,
 } from 'graphql';
+import { UUIDType } from './uuid.js';
+import { profileField, profileType } from './profileTypes.js';
+import { manyPostsField, postType } from './postTypes.js';
 
 // Interfaces
 export interface IUserTypeArgs {
@@ -25,12 +27,11 @@ export interface IUpdateUserArgs {
 }
 
 // Types
-const userType = new GraphQLObjectType({
+const userType: GraphQLObjectType = new GraphQLObjectType({
   name: 'User',
-  fields: {
+  fields: () => ({
     id: {
-      // TODO: Figure out uuid type
-      type: GraphQLString,
+      type: UUIDType,
     },
     name: {
       type: GraphQLString,
@@ -38,14 +39,24 @@ const userType = new GraphQLObjectType({
     balance: {
       type: GraphQLFloat,
     },
-  },
+    profile: profileField,
+    posts: manyPostsField,
+    subscribedToUser: {
+      type: new GraphQLNonNull(new GraphQLList(new GraphQLNonNull(userType))),
+      resolve: subscribedToUserResolver,
+    },
+    userSubscribedTo: {
+      type: new GraphQLNonNull(new GraphQLList(new GraphQLNonNull(userType))),
+      resolve: userSubscribedToResolver,
+    },
+  }),
 });
 
 const manyUsersType = new GraphQLNonNull(new GraphQLList(new GraphQLNonNull(userType)));
 
 // Args
 const userTypeArgs = {
-  id: { type: GraphQLString },
+  id: { type: UUIDType },
 };
 
 const createUserArgs = {
@@ -59,7 +70,7 @@ const createUserArgs = {
 
 const updateUserArgs = {
   id: {
-    type: new GraphQLNonNull(GraphQLString),
+    type: new GraphQLNonNull(UUIDType),
   },
   name: {
     type: GraphQLString,
@@ -84,6 +95,38 @@ const userResolver = async (_parent, args: IUserTypeArgs, fastify: FastifyInstan
 
 const manyUsersResolver = async (_parent, _args, fastify: FastifyInstance) => {
   return fastify.prisma.user.findMany();
+};
+
+const subscribedToUserResolver = async (
+  parent: IUserTypeArgs,
+  _args,
+  fastify: FastifyInstance,
+) => {
+  return fastify.prisma.user.findMany({
+    where: {
+      subscribedToUser: {
+        every: {
+          authorId: parent.id,
+        },
+      },
+    },
+  });
+};
+
+const userSubscribedToResolver = async (
+  parent: IUserTypeArgs,
+  _args,
+  fastify: FastifyInstance,
+) => {
+  return fastify.prisma.user.findMany({
+    where: {
+      userSubscribedTo: {
+        every: {
+          subscriberId: parent.id,
+        },
+      },
+    },
+  });
 };
 
 const createUserResolve = async (
@@ -147,9 +190,16 @@ const updateUserField = {
 const deleteUserField = {
   type: userType,
   args: {
-    id: { type: GraphQLID },
+    id: { type: UUIDType },
   },
   resolve: deleteUserResolve,
 };
 
-export { userField, manyUsersField, createUserField, updateUserField, deleteUserField };
+export {
+  userType,
+  userField,
+  manyUsersField,
+  createUserField,
+  updateUserField,
+  deleteUserField,
+};

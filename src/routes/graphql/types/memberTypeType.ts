@@ -1,20 +1,21 @@
 import { FastifyInstance } from 'fastify';
 import {
+  GraphQLFloat,
   GraphQLInt,
   GraphQLList,
   GraphQLNonNull,
   GraphQLObjectType,
-  GraphQLString,
 } from 'graphql';
+import { memberTypeId } from './memberTypeId.js';
 
 const memberType = new GraphQLObjectType({
   name: 'MemberType',
   fields: {
     id: {
-      type: GraphQLString,
+      type: memberTypeId,
     },
     discount: {
-      type: GraphQLInt,
+      type: GraphQLFloat,
     },
     postsLimitPerMonth: {
       type: GraphQLInt,
@@ -23,7 +24,7 @@ const memberType = new GraphQLObjectType({
 });
 
 const memberTypeArgs = {
-  id: { type: GraphQLString },
+  id: { type: memberTypeId },
 };
 
 export interface IMemberTypeArgs {
@@ -65,4 +66,4 @@ const manyMemberTypesField = {
   resolve: manyMemberTypesResolver,
 };
 
-export { memberTypeField, manyMemberTypesField };
+export { memberType, memberTypeField, manyMemberTypesField };

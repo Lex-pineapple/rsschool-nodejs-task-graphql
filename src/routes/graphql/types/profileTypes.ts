@@ -6,8 +6,10 @@ import {
   GraphQLList,
   GraphQLNonNull,
   GraphQLObjectType,
-  GraphQLString,
 } from 'graphql';
+import { UUIDType } from './uuid.js';
+import { memberTypeId } from './memberTypeId.js';
+import { memberType } from './memberTypeType.js';
 
 interface IProfileTypeArgs {
   id: string;
@@ -33,8 +35,7 @@ const profileType = new GraphQLObjectType({
   name: 'Profile',
   fields: {
     id: {
-      // TODO: Figure out uuid type
-      type: GraphQLString,
+      type: UUIDType,
     },
     isMale: {
       type: GraphQLBoolean,
@@ -43,12 +44,13 @@ const profileType = new GraphQLObjectType({
       type: GraphQLInt,
     },
     userId: {
-      // TODO: Check later
-      type: GraphQLID,
+      type: UUIDType,
     },
     memberTypeId: {
-      // TODO: Check later
-      type: GraphQLID,
+      type: memberTypeId,
+    },
+    memberType: {
+      type: memberType,
     },
   },
 });
@@ -60,7 +62,7 @@ const manyProfilesType = new GraphQLNonNull(
 // Args
 const profileTypeArgs = {
   id: {
-    type: GraphQLString,
+    type: UUIDType,
   },
 };
 
@@ -72,18 +74,16 @@ const createProfileArgs = {
     type: new GraphQLNonNull(GraphQLInt),
   },
   userId: {
-    // TODO: Check later
-    type: new GraphQLNonNull(GraphQLID),
+    type: new GraphQLNonNull(UUIDType),
   },
   memberTypeId: {
-    // TODO: Check later
-    type: new GraphQLNonNull(GraphQLID),
+    type: new GraphQLNonNull(memberTypeId),
   },
 };
 
 const updateProfileArgs = {
   id: {
-    type: new GraphQLNonNull(GraphQLString),
+    type: new GraphQLNonNull(UUIDType),
   },
   isMale: {
     type: new GraphQLNonNull(GraphQLBoolean),
@@ -92,12 +92,10 @@ const updateProfileArgs = {
     type: new GraphQLNonNull(GraphQLInt),
   },
   userId: {
-    // TODO: Check later
-    type: new GraphQLNonNull(GraphQLID),
+    type: new GraphQLNonNull(UUIDType),
   },
   memberTypeId: {
-    // TODO: Check later
-    type: new GraphQLNonNull(GraphQLID),
+    type: new GraphQLNonNull(memberTypeId),
   },
 };
 
@@ -183,12 +181,13 @@ const updateProfileField = {
 const deleteProfileField = {
   type: profileType,
   args: {
-    id: { type: GraphQLID },
+    id: { type: UUIDType },
   },
   resolve: deleteProfileResolve,
 };
 
 export {
+  profileType,
   profileField,
   manyProfilesField,
   createProfileField,

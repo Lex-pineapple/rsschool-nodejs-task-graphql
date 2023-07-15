@@ -1,11 +1,6 @@
 import { FastifyInstance } from 'fastify';
-import {
-  GraphQLID,
-  GraphQLList,
-  GraphQLNonNull,
-  GraphQLObjectType,
-  GraphQLString,
-} from 'graphql';
+import { GraphQLList, GraphQLNonNull, GraphQLObjectType, GraphQLString } from 'graphql';
+import { UUIDType } from './uuid.js';
 
 export interface IPostTypeArgs {
   id: string;
@@ -30,8 +25,7 @@ const postType = new GraphQLObjectType({
   name: 'Post',
   fields: {
     id: {
-      // TODO: Figure out uuid type
-      type: GraphQLString,
+      type: UUIDType,
     },
     title: {
       type: GraphQLString,
@@ -40,7 +34,7 @@ const postType = new GraphQLObjectType({
       type: GraphQLString,
     },
     authorId: {
-      type: GraphQLID,
+      type: UUIDType,
     },
   },
 });
@@ -49,13 +43,12 @@ const manyPostsType = new GraphQLNonNull(new GraphQLList(new GraphQLNonNull(post
 
 // Args
 const postTypeArgs = {
-  id: { type: GraphQLString },
+  id: { type: UUIDType },
 };
 
 const createPostArgs = {
   id: {
-    // TODO: Figure out uuid type
-    type: new GraphQLNonNull(GraphQLString),
+    type: new GraphQLNonNull(UUIDType),
   },
   title: {
     type: new GraphQLNonNull(GraphQLString),
@@ -64,14 +57,13 @@ const createPostArgs = {
     type: new GraphQLNonNull(GraphQLString),
   },
   authorId: {
-    type: new GraphQLNonNull(GraphQLID),
+    type: new GraphQLNonNull(UUIDType),
   },
 };
 
 const updatePostArgs = {
   id: {
-    // TODO: Figure out uuid type
-    type: GraphQLString,
+    type: UUIDType,
   },
   title: {
     type: GraphQLString,
@@ -80,7 +72,7 @@ const updatePostArgs = {
     type: GraphQLString,
   },
   authorId: {
-    type: GraphQLID,
+    type: UUIDType,
   },
 };
 
@@ -162,9 +154,16 @@ const updatePostField = {
 const deletePostField = {
   type: postType,
   args: {
-    id: { type: GraphQLID },
+    id: { type: UUIDType },
   },
   resolve: deletePostResolve,
 };
 
-export { postField, manyPostsField, createPostField, updatePostField, deletePostField };
+export {
+  postType,
+  postField,
+  manyPostsField,
+  createPostField,
+  updatePostField,
+  deletePostField,
+};
