@@ -7,63 +7,139 @@ import {
   GraphQLObjectType,
 } from 'graphql';
 import { memberTypeId } from './memberTypeId.js';
+import { IProfileType, Profile } from './profileTypes.js';
 
-const memberType = new GraphQLObjectType({
-  name: 'MemberType',
-  fields: {
-    id: {
-      type: memberTypeId,
-    },
-    discount: {
-      type: GraphQLFloat,
-    },
-    postsLimitPerMonth: {
-      type: GraphQLInt,
-    },
-  },
-});
-
-const memberTypeArgs = {
-  id: { type: memberTypeId },
-};
+export interface IMemberType {
+  id: string;
+  discount: number;
+  postsLimitPerMonth: number;
+  profiles: IProfileType[];
+}
 
 export interface IMemberTypeArgs {
   id: string;
 }
 
-const memberTypeResolver = async (
-  _parent,
-  args: IMemberTypeArgs,
-  fastify: FastifyInstance,
-) => {
-  const memberType = await fastify.prisma.memberType.findUnique({
-    where: {
-      id: args.id,
-    },
+class MemberType {
+  // Types
+  static type: GraphQLObjectType = new GraphQLObjectType({
+    name: 'MemberType',
+    fields: () => ({
+      id: {
+        type: memberTypeId,
+      },
+      discount: {
+        type: GraphQLFloat,
+      },
+      postsLimitPerMonth: {
+        type: GraphQLInt,
+      },
+      profiles: {
+        type: new GraphQLList(Profile.type),
+        resolve: Profile.profileFromMemberTypeResolver,
+      },
+    }),
   });
-  if (memberType === null) {
-    throw fastify.httpErrors.notFound();
-  }
-  return memberType;
-};
 
-const manyMemberTypes = new GraphQLNonNull(
-  new GraphQLList(new GraphQLNonNull(memberType)),
-);
+  static arrayType = new GraphQLNonNull(
+    new GraphQLList(new GraphQLNonNull(MemberType.type)),
+  );
 
-const manyMemberTypesResolver = async (_parent, _args, fastify: FastifyInstance) => {
-  return fastify.prisma.memberType.findMany();
-};
+  // Args
+  static argsGet = {
+    id: { type: memberTypeId },
+  };
 
+  // Resolver
+  static getResolver = async (
+    _parent,
+    args: IMemberTypeArgs,
+    fastify: FastifyInstance,
+  ) => {
+    const memberType = await fastify.prisma.memberType.findUnique({
+      where: {
+        id: args.id,
+      },
+    });
+    // if (memberType === null) {
+    //   throw fastify.httpErrors.notFound();
+    // }
+    return memberType;
+  };
+
+  static memberTypeFromProfileResolver = async (
+    parent: IProfileType,
+    _args,
+    fastify: FastifyInstance,
+  ) => {
+    const memberType = await fastify.prisma.memberType.findUnique({
+      where: {
+        id: parent.memberTypeId,
+      },
+    });
+    // if (memberType === null) {
+    //   throw fastify.httpErrors.notFound();
+    // }
+    return memberType;
+  };
+
+  static getManyResolver = async (_parent, _args, fastify: FastifyInstance) => {
+    return fastify.prisma.memberType.findMany();
+  };
+}
+
+// // Args
+// const memberTypeArgs = {
+//   id: { type: memberTypeId },
+// };
+
+// // Resolver
+// const memberTypeResolver = async (
+//   _parent,
+//   args: IMemberTypeArgs,
+//   fastify: FastifyInstance,
+// ) => {
+//   const memberType = await fastify.prisma.memberType.findUnique({
+//     where: {
+//       id: args.id,
+//     },
+//   });
+//   if (memberType === null) {
+//     throw fastify.httpErrors.notFound();
+//   }
+//   return memberType;
+// };
+
+// const profileMemberTypeResolver = async (
+//   parent: IProfileType,
+//   _args,
+//   fastify: FastifyInstance,
+// ) => {
+//   const memberType = await fastify.prisma.memberType.findUnique({
+//     where: {
+//       id: parent.memberTypeId,
+//     },
+//   });
+//   if (memberType === null) {
+//     throw fastify.httpErrors.notFound();
+//   }
+//   return memberType;
+// };
+
+// const manyMemberTypesResolver = async (_parent, _args, fastify: FastifyInstance) => {
+//   return fastify.prisma.memberType.findMany();
+// };
+
+// Fields
 const memberTypeField = {
-  type: memberType,
-  args: memberTypeArgs,
-  resolve: memberTypeResolver,
+  type: MemberType.type,
+  args: MemberType.argsGet,
+  resolve: MemberType.getResolver,
 };
 
 const manyMemberTypesField = {
-  type: manyMemberTypes,
-  resolve: manyMemberTypesResolver,
+  type: MemberType.arrayType,
+  resolve: MemberType.getManyResolver,
 };
 
-export { memberType, memberTypeField, manyMemberTypesField };
+export { memberTypeField, manyMemberTypesField, MemberType };

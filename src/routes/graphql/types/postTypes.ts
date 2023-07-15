@@ -1,6 +1,15 @@
 import { FastifyInstance } from 'fastify';
 import { GraphQLList, GraphQLNonNull, GraphQLObjectType, GraphQLString } from 'graphql';
 import { UUIDType } from './uuid.js';
+import { IUserType, User } from './userTypes.js';
+
+export interface IPostType {
+  id: string;
+  title: string;
+  content: string;
+  author: IUserType;
+  authorId: string;
+}
 
 export interface IPostTypeArgs {
   id: string;
@@ -20,10 +29,53 @@ interface IUpdatePostArgs {
   authorId: string;
 }
 
-// Types
-const postType = new GraphQLObjectType({
-  name: 'Post',
-  fields: {
+class Post {
+  // Types
+  static type: GraphQLObjectType = new GraphQLObjectType({
+    name: 'Post',
+    fields: () => ({
+      id: {
+        type: UUIDType,
+      },
+      title: {
+        type: GraphQLString,
+      },
+      content: {
+        type: GraphQLString,
+      },
+      authorId: {
+        type: UUIDType,
+      },
+      author: {
+        type: User.type,
+        resolve: User.usersFromPostResolver,
+      },
+    }),
+  });
+
+  static arrayType = new GraphQLNonNull(new GraphQLList(new GraphQLNonNull(Post.type)));
+
+  // Args
+  static argsGet = {
+    id: { type: UUIDType },
+  };
+
+  static argsCreate = {
+    id: {
+      type: new GraphQLNonNull(UUIDType),
+    },
+    title: {
+      type: new GraphQLNonNull(GraphQLString),
+    },
+    content: {
+      type: new GraphQLNonNull(GraphQLString),
+    },
+    authorId: {
+      type: new GraphQLNonNull(UUIDType),
+    },
+  };
+
+  static argsUpdate = {
     id: {
       type: UUIDType,
     },
@@ -36,134 +88,232 @@ const postType = new GraphQLObjectType({
     authorId: {
       type: UUIDType,
     },
-  },
-});
+  };
 
-const manyPostsType = new GraphQLNonNull(new GraphQLList(new GraphQLNonNull(postType)));
+  // Resolvers
+  static getResolver = async (_parent, args: IPostTypeArgs, fastify: FastifyInstance) => {
+    const post = await fastify.prisma.post.findUnique({
+      where: {
+        id: args.id,
+      },
+    });
+    // if (post === null) {
+    //   throw fastify.httpErrors.notFound();
+    // }
+    return post;
+  };
 
-// Args
-const postTypeArgs = {
-  id: { type: UUIDType },
-};
+  static postFromParentResolver = async (
+    parent: IUserType,
+    _args,
+    fastify: FastifyInstance,
+  ) => {
+    return fastify.prisma.post.findMany({
+      where: {
+        authorId: parent.id,
+      },
+    });
+  };
 
-const createPostArgs = {
-  id: {
-    type: new GraphQLNonNull(UUIDType),
-  },
-  title: {
-    type: new GraphQLNonNull(GraphQLString),
-  },
-  content: {
-    type: new GraphQLNonNull(GraphQLString),
-  },
-  authorId: {
-    type: new GraphQLNonNull(UUIDType),
-  },
-};
+  static getManyResolver = async (_parent, _args, fastify: FastifyInstance) => {
+    return fastify.prisma.post.findMany();
+  };
 
-const updatePostArgs = {
-  id: {
-    type: UUIDType,
-  },
-  title: {
-    type: GraphQLString,
-  },
-  content: {
-    type: GraphQLString,
-  },
-  authorId: {
-    type: UUIDType,
-  },
-};
+  static createResolver = async (
+    _parent,
+    args: ICreatePostArgs,
+    fastify: FastifyInstance,
+  ) => {
+    return fastify.prisma.post.create({
+      data: args,
+    });
+  };
 
-// Resolvers
-const postResolver = async (_parent, args: IPostTypeArgs, fastify: FastifyInstance) => {
-  const post = await fastify.prisma.post.findUnique({
-    where: {
-      id: args.id,
-    },
-  });
-  if (post === null) {
-    throw fastify.httpErrors.notFound();
-  }
-  return post;
-};
+  static updateResolver = async (
+    _parent,
+    args: IUpdatePostArgs,
+    fastify: FastifyInstance,
+  ) => {
+    const { id, ...body } = args;
+    return fastify.prisma.post.update({
+      where: { id: id },
+      data: body,
+    });
+  };
 
-const manyPostsResolver = async (_parent, _args, fastify: FastifyInstance) => {
-  return fastify.prisma.post.findMany();
-};
+  static deleteResolver = async (
+    _parent,
+    args: IPostTypeArgs,
+    fastify: FastifyInstance,
+  ) => {
+    await fastify.prisma.post.delete({
+      where: {
+        id: args.id,
+      },
+    });
+  };
+}
 
-const createPostResolve = async (
-  _parent,
-  args: ICreatePostArgs,
-  fastify: FastifyInstance,
-) => {
-  return fastify.prisma.post.create({
-    data: args,
-  });
-};
+// // Types
+// const postType = new GraphQLObjectType({
+//   name: 'Post',
+//   fields: () => ({
+//     id: {
+//       type: UUIDType,
+//     },
+//     title: {
+//       type: GraphQLString,
+//     },
+//     content: {
+//       type: GraphQLString,
+//     },
+//     authorId: {
+//       type: UUIDType,
+//     },
+//     author: {
+//       type: userType,
+//       resolve: postUserResolver,
+//     },
+//   }),
+// });
 
-const updatePostResolve = async (
-  _parent,
-  args: IUpdatePostArgs,
-  fastify: FastifyInstance,
-) => {
-  const { id, ...body } = args;
-  return fastify.prisma.post.update({
-    where: { id: id },
-    data: body,
-  });
-};
+// const manyPostsType = new GraphQLNonNull(new GraphQLList(new GraphQLNonNull(postType)));
 
-const deletePostResolve = async (
-  _parent,
-  args: IPostTypeArgs,
-  fastify: FastifyInstance,
-) => {
-  await fastify.prisma.post.delete({
-    where: {
-      id: args.id,
-    },
-  });
-};
+// // Args
+// const postTypeArgs = {
+//   id: { type: UUIDType },
+// };
+
+// const createPostArgs = {
+//   id: {
+//     type: new GraphQLNonNull(UUIDType),
+//   },
+//   title: {
+//     type: new GraphQLNonNull(GraphQLString),
+//   },
+//   content: {
+//     type: new GraphQLNonNull(GraphQLString),
+//   },
+//   authorId: {
+//     type: new GraphQLNonNull(UUIDType),
+//   },
+// };
+
+// const updatePostArgs = {
+//   id: {
+//     type: UUIDType,
+//   },
+//   title: {
+//     type: GraphQLString,
+//   },
+//   content: {
+//     type: GraphQLString,
+//   },
+//   authorId: {
+//     type: UUIDType,
+//   },
+// };
+
+// // Resolvers
+// const postResolver = async (_parent, args: IPostTypeArgs, fastify: FastifyInstance) => {
+//   const post = await fastify.prisma.post.findUnique({
+//     where: {
+//       id: args.id,
+//     },
+//   });
+//   if (post === null) {
+//     throw fastify.httpErrors.notFound();
+//   }
+//   return post;
+// };
+
+// const postResolverFromParent = async (
+//   parent: IUserType,
+//   _args,
+//   fastify: FastifyInstance,
+// ) => {
+//   return fastify.prisma.post.findMany({
+//     where: {
+//       authorId: parent.id,
+//     },
+//   });
+// };
+
+// const manyPostsResolver = async (_parent, _args, fastify: FastifyInstance) => {
+//   return fastify.prisma.post.findMany();
+// };
+
+// const createPostResolve = async (
+//   _parent,
+//   args: ICreatePostArgs,
+//   fastify: FastifyInstance,
+// ) => {
+//   return fastify.prisma.post.create({
+//     data: args,
+//   });
+// };
+
+// const updatePostResolve = async (
+//   _parent,
+//   args: IUpdatePostArgs,
+//   fastify: FastifyInstance,
+// ) => {
+//   const { id, ...body } = args;
+//   return fastify.prisma.post.update({
+//     where: { id: id },
+//     data: body,
+//   });
+// };
+
+// const deletePostResolve = async (
+//   _parent,
+//   args: IPostTypeArgs,
+//   fastify: FastifyInstance,
+// ) => {
+//   await fastify.prisma.post.delete({
+//     where: {
+//       id: args.id,
+//     },
+//   });
+// };
 
 // Fields
 const postField = {
-  type: postType,
-  args: postTypeArgs,
-  resolve: postResolver,
+  type: Post.type,
+  args: Post.argsGet,
+  resolve: Post.getResolver,
 };
 
 const manyPostsField = {
-  type: manyPostsType,
-  resolve: manyPostsResolver,
+  type: Post.arrayType,
+  resolve: Post.getManyResolver,
 };
 
 const createPostField = {
-  type: postType,
-  args: createPostArgs,
-  resolve: createPostResolve,
+  type: Post.type,
+  args: Post.argsCreate,
+  resolve: Post.createResolver,
 };
 
 const updatePostField = {
-  type: postType,
-  args: updatePostArgs,
-  resolve: updatePostResolve,
+  type: Post.type,
+  args: Post.argsUpdate,
+  resolve: Post.updateResolver,
 };
 
 const deletePostField = {
-  type: postType,
+  type: Post.type,
   args: {
     id: { type: UUIDType },
   },
-  resolve: deletePostResolve,
+  resolve: Post.deleteResolver,
 };
 
 export {
-  postType,
   postField,
   manyPostsField,
   createPostField,
   updatePostField,
   deletePostField,
+  Post,
 };

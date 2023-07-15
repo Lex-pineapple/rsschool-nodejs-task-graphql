@@ -3,10 +3,10 @@ import { GraphQLEnumType } from 'graphql';
 const memberTypeId = new GraphQLEnumType({
   name: 'MemberTypeId',
   values: {
-    BASIC: {
+    basic: {
       value: 'basic',
     },
-    BUSINESS: {
+    business: {
       value: 'business',
     },
   },
