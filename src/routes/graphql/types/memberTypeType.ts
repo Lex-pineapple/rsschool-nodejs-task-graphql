@@ -61,9 +61,6 @@ class MemberType {
         id: args.id,
       },
     });
-    // if (memberType === null) {
-    //   throw fastify.httpErrors.notFound();
-    // }
     return memberType;
   };
 
@@ -77,9 +74,6 @@ class MemberType {
         id: parent.memberTypeId,
       },
     });
-    // if (memberType === null) {
-    //   throw fastify.httpErrors.notFound();
-    // }
     return memberType;
   };
 
@@ -87,48 +81,6 @@ class MemberType {
     return fastify.prisma.memberType.findMany();
   };
 }
-
-// // Args
-// const memberTypeArgs = {
-//   id: { type: memberTypeId },
-// };
-
-// // Resolver
-// const memberTypeResolver = async (
-//   _parent,
-//   args: IMemberTypeArgs,
-//   fastify: FastifyInstance,
-// ) => {
-//   const memberType = await fastify.prisma.memberType.findUnique({
-//     where: {
-//       id: args.id,
-//     },
-//   });
-//   if (memberType === null) {
-//     throw fastify.httpErrors.notFound();
-//   }
-//   return memberType;
-// };
-
-// const profileMemberTypeResolver = async (
-//   parent: IProfileType,
-//   _args,
-//   fastify: FastifyInstance,
-// ) => {
-//   const memberType = await fastify.prisma.memberType.findUnique({
-//     where: {
-//       id: parent.memberTypeId,
-//     },
-//   });
-//   if (memberType === null) {
-//     throw fastify.httpErrors.notFound();
-//   }
-//   return memberType;
-// };
-
-// const manyMemberTypesResolver = async (_parent, _args, fastify: FastifyInstance) => {
-//   return fastify.prisma.memberType.findMany();
-// };
 
 // Fields
 const memberTypeField = {

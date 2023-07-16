@@ -1,5 +1,5 @@
 import { GraphQLObjectType } from 'graphql';
-import { createUserField, updateUserField, deleteUserField } from '../types/userTypes.js';
+import { createUserField, changeUserField, deleteUserField } from '../types/userTypes.js';
 import {
   createProfileField,
   updateProfileField,
@@ -11,7 +11,7 @@ const mutationType = new GraphQLObjectType({
   name: 'Mutation',
   fields: {
     createUser: createUserField,
-    updateUser: updateUserField,
+    changeUser: changeUserField,
     deleteUser: deleteUserField,
 
     createProfile: createProfileField,

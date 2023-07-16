@@ -1,6 +1,8 @@
 import { FastifyInstance } from 'fastify';
 import {
+  GraphQLBoolean,
   GraphQLFloat,
+  GraphQLInputObjectType,
   GraphQLList,
   GraphQLNonNull,
   GraphQLObjectType,
@@ -25,15 +27,23 @@ export interface IUserTypeArgs {
   id: string;
 }
 
+export interface IDeleteUserTypeArgs {
+  id: string;
+}
+
 export interface ICreateUserArgs {
-  name: string;
-  balance: number;
+  dto: {
+    name: string;
+    balance: number;
+  };
 }
 
 export interface IUpdateUserArgs {
   id: string;
-  name?: string;
-  balance?: number;
+  dto: {
+    name?: string;
+    balance?: number;
+  };
 }
 
 class User {
@@ -76,26 +86,29 @@ class User {
     id: { type: UUIDType },
   };
 
-  static argsCreate = {
-    name: {
-      type: new GraphQLNonNull(GraphQLString),
-    },
-    balance: {
-      type: new GraphQLNonNull(GraphQLFloat),
-    },
-  };
+  static argsCreate: GraphQLInputObjectType = new GraphQLInputObjectType({
+    name: 'CreateUserInput',
+    fields: () => ({
+      name: {
+        type: new GraphQLNonNull(GraphQLString),
+      },
+      balance: {
+        type: new GraphQLNonNull(GraphQLFloat),
+      },
+    }),
+  });
 
-  static argsUpdate = {
-    id: {
-      type: new GraphQLNonNull(UUIDType),
-    },
-    name: {
-      type: GraphQLString,
-    },
-    balance: {
-      type: GraphQLFloat,
-    },
-  };
+  static argsUpdate: GraphQLInputObjectType = new GraphQLInputObjectType({
+    name: 'ChangeUserInput',
+    fields: () => ({
+      name: {
+        type: GraphQLString,
+      },
+      balance: {
+        type: GraphQLFloat,
+      },
+    }),
+  });
 
   // Resolvers
   static getResolver = async (_parent, args: IUserTypeArgs, fastify: FastifyInstance) => {
@@ -120,9 +133,6 @@ class User {
         id: parent.userId,
       },
     });
-    // if (user === null) {
-    //   throw fastify.httpErrors.notFound();
-    // }
     return user;
   };
 
@@ -136,9 +146,6 @@ class User {
         id: parent.authorId,
       },
     });
-    // if (user === null) {
-    //   throw fastify.httpErrors.notFound();
-    // }
     return user;
   };
 
@@ -184,7 +191,7 @@ class User {
     fastify: FastifyInstance,
   ) => {
     return fastify.prisma.user.create({
-      data: args,
+      data: args.dto,
     });
   };
 
@@ -193,196 +200,27 @@ class User {
     args: IUpdateUserArgs,
     fastify: FastifyInstance,
   ) => {
-    const { id, ...body } = args;
     return fastify.prisma.user.update({
-      where: { id: id },
-      data: body,
+      where: { id: args.id },
+      data: args.dto,
     });
   };
 
   static deleteResolver = async (
     _parent,
-    args: IUserTypeArgs,
+    args: IDeleteUserTypeArgs,
     fastify: FastifyInstance,
   ) => {
+    console.log(args);
+
     await fastify.prisma.user.delete({
       where: {
         id: args.id,
       },
     });
+    return null;
   };
 }
-
-// Types
-// const userType: GraphQLObjectType = new GraphQLObjectType({
-//   name: 'User',
-//   fields: () => ({
-//     id: {
-//       type: UUIDType,
-//     },
-//     name: {
-//       type: GraphQLString,
-//     },
-//     balance: {
-//       type: GraphQLFloat,
-//     },
-//     profile: {
-//       type: profileType,
-//       resolve: profileResolverFromParent,
-//     },
-//     posts: {
-//       type: new GraphQLList(postType),
-//       resolve: postResolverFromParent,
-//     },
-//     subscribedToUser: {
-//       type: new GraphQLNonNull(new GraphQLList(new GraphQLNonNull(userType))),
-//       resolve: subscribedToUserResolver,
-//     },
-//     userSubscribedTo: {
-//       type: new GraphQLNonNull(new GraphQLList(new GraphQLNonNull(userType))),
-//       resolve: userSubscribedToResolver,
-//     },
-//   }),
-// });
-
-// const manyUsersType = new GraphQLNonNull(new GraphQLList(new GraphQLNonNull(userType)));
-
-// Args
-// const userTypeArgs = {
-//   id: { type: UUIDType },
-// };
-
-// const createUserArgs = {
-//   name: {
-//     type: new GraphQLNonNull(GraphQLString),
-//   },
-//   balance: {
-//     type: new GraphQLNonNull(GraphQLFloat),
-//   },
-// };
-
-// const updateUserArgs = {
-//   id: {
-//     type: new GraphQLNonNull(UUIDType),
-//   },
-//   name: {
-//     type: GraphQLString,
-//   },
-//   balance: {
-//     type: GraphQLFloat,
-//   },
-// };
-
-// Resolvers
-// const userResolver = async (_parent, args: IUserTypeArgs, fastify: FastifyInstance) => {
-//   const user = await fastify.prisma.user.findUnique({
-//     where: {
-//       id: args.id,
-//     },
-//   });
-//   if (user === null) {
-//     throw fastify.httpErrors.notFound();
-//   }
-//   return user;
-// };
-
-// const profileUserResolver = async (
-//   parent: IProfileType,
-//   _args,
-//   fastify: FastifyInstance,
-// ) => {
-//   const user = await fastify.prisma.user.findUnique({
-//     where: {
-//       id: parent.userId,
-//     },
-//   });
-//   if (user === null) {
-//     throw fastify.httpErrors.notFound();
-//   }
-//   return user;
-// };
-
-// const postUserResolver = async (parent: IPostType, _args, fastify: FastifyInstance) => {
-//   const user = await fastify.prisma.user.findUnique({
-//     where: {
-//       id: parent.authorId,
-//     },
-//   });
-//   if (user === null) {
-//     throw fastify.httpErrors.notFound();
-//   }
-//   return user;
-// };
-
-// const manyUsersResolver = async (_parent, _args, fastify: FastifyInstance) => {
-//   return fastify.prisma.user.findMany();
-// };
-
-// const subscribedToUserResolver = async (
-//   parent: IUserTypeArgs,
-//   _args,
-//   fastify: FastifyInstance,
-// ) => {
-//   return fastify.prisma.user.findMany({
-//     where: {
-//       subscribedToUser: {
-//         every: {
-//           authorId: parent.id,
-//         },
-//       },
-//     },
-//   });
-// };
-
-// const userSubscribedToResolver = async (
-//   parent: IUserTypeArgs,
-//   _args,
-//   fastify: FastifyInstance,
-// ) => {
-//   return fastify.prisma.user.findMany({
-//     where: {
-//       userSubscribedTo: {
-//         every: {
-//           subscriberId: parent.id,
-//         },
-//       },
-//     },
-//   });
-// };
-
-// const createUserResolve = async (
-//   _parent,
-//   args: ICreateUserArgs,
-//   fastify: FastifyInstance,
-// ) => {
-//   return fastify.prisma.user.create({
-//     data: args,
-//   });
-// };
-
-// const updateUserResolve = async (
-//   _parent,
-//   args: IUpdateUserArgs,
-//   fastify: FastifyInstance,
-// ) => {
-//   const { id, ...body } = args;
-//   return fastify.prisma.user.update({
-//     where: { id: id },
-//     data: body,
-//   });
-// };
-
-// const deleteUserResolve = async (
-//   _parent,
-//   args: IUserTypeArgs,
-//   fastify: FastifyInstance,
-// ) => {
-//   await fastify.prisma.user.delete({
-//     where: {
-//       id: args.id,
-//     },
-//   });
-// };
 
 // Fields
 const userField = {
@@ -398,18 +236,29 @@ const manyUsersField = {
 
 const createUserField = {
   type: User.type,
-  args: User.argsCreate,
+  args: {
+    dto: {
+      type: new GraphQLNonNull(User.argsCreate),
+    },
+  },
   resolve: User.createResolver,
 };
 
-const updateUserField = {
+const changeUserField = {
   type: User.type,
-  args: User.argsUpdate,
+  args: {
+    id: {
+      type: new GraphQLNonNull(UUIDType),
+    },
+    dto: {
+      type: new GraphQLNonNull(User.argsUpdate),
+    },
+  },
   resolve: User.updateResolver,
 };
 
 const deleteUserField = {
-  type: User.type,
+  type: GraphQLBoolean,
   args: {
     id: { type: UUIDType },
   },
@@ -420,7 +269,7 @@ export {
   userField,
   manyUsersField,
   createUserField,
-  updateUserField,
+  changeUserField,
   deleteUserField,
   User,
 };

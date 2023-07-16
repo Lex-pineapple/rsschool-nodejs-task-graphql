@@ -126,9 +126,6 @@ class Profile {
         id: args.id,
       },
     });
-    // if (profile === null) {
-    //   throw fastify.httpErrors.notFound();
-    // }
     return profile;
   };
 
@@ -146,9 +143,6 @@ class Profile {
         userId: parent.id,
       },
     });
-    // if (profile === null) {
-    //   throw fastify.httpErrors.notFound();
-    // }
     return profile;
   };
 
@@ -198,151 +192,6 @@ class Profile {
     });
   };
 }
-
-// Types
-// const profileType: GraphQLObjectType = new GraphQLObjectType({
-//   name: 'Profile',
-//   fields: () => ({
-//     id: {
-//       type: UUIDType,
-//     },
-//     isMale: {
-//       type: GraphQLBoolean,
-//     },
-//     yearOfBirth: {
-//       type: GraphQLInt,
-//     },
-//     userId: {
-//       type: UUIDType,
-//     },
-//     user: {
-//       type: userType,
-//       resolve: profileUserResolver,
-//     },
-//     memberTypeId: {
-//       type: memberTypeId,
-//     },
-//     memberType: {
-//       type: memberType,
-//       resolve: profileMemberTypeResolver,
-//     },
-//   }),
-// });
-
-// const manyProfilesType = new GraphQLNonNull(
-//   new GraphQLList(new GraphQLNonNull(profileType)),
-// );
-
-// Args
-// const profileTypeArgs = {
-//   id: {
-//     type: UUIDType,
-//   },
-// };
-
-// const createProfileArgs = {
-//   isMale: {
-//     type: new GraphQLNonNull(GraphQLBoolean),
-//   },
-//   yearOfBirth: {
-//     type: new GraphQLNonNull(GraphQLInt),
-//   },
-//   userId: {
-//     type: new GraphQLNonNull(UUIDType),
-//   },
-//   memberTypeId: {
-//     type: new GraphQLNonNull(memberTypeId),
-//   },
-// };
-
-// const updateProfileArgs = {
-//   id: {
-//     type: new GraphQLNonNull(UUIDType),
-//   },
-//   isMale: {
-//     type: new GraphQLNonNull(GraphQLBoolean),
-//   },
-//   yearOfBirth: {
-//     type: new GraphQLNonNull(GraphQLInt),
-//   },
-//   userId: {
-//     type: new GraphQLNonNull(UUIDType),
-//   },
-//   memberTypeId: {
-//     type: new GraphQLNonNull(memberTypeId),
-//   },
-// };
-
-// Resolvers
-// const profileResolver = async (
-//   _parent,
-//   args: IProfileTypeArgs,
-//   fastify: FastifyInstance,
-// ) => {
-//   const profile = await fastify.prisma.profile.findUnique({
-//     where: {
-//       id: args.id,
-//     },
-//   });
-//   if (profile === null) {
-//     throw fastify.httpErrors.notFound();
-//   }
-//   return profile;
-// };
-
-// const profileResolverFromParent = async (
-//   parent: IUserType,
-//   _args,
-//   fastify: FastifyInstance,
-// ) => {
-//   const profile = await fastify.prisma.profile.findUnique({
-//     where: {
-//       userId: parent.id,
-//     },
-//   });
-//   if (profile === null) {
-//     throw fastify.httpErrors.notFound();
-//   }
-//   return profile;
-// };
-
-// const manyProfilesResolver = async (_parent, _args, fastify: FastifyInstance) => {
-//   return fastify.prisma.profile.findMany();
-// };
-
-// const createProfileResolve = async (
-//   _parent,
-//   args: ICreateProfileArgs,
-//   fastify: FastifyInstance,
-// ) => {
-//   return fastify.prisma.profile.create({
-//     data: args,
-//   });
-// };
-
-// const updateProfileResolver = async (
-//   _parent,
-//   args: IUpdateProfileArgs,
-//   fastify: FastifyInstance,
-// ) => {
-//   const { id, ...body } = args;
-//   return fastify.prisma.profile.update({
-//     where: { id: id },
-//     data: body,
-//   });
-// };
-
-// const deleteProfileResolve = async (
-//   _parent,
-//   args: IProfileTypeArgs,
-//   fastify: FastifyInstance,
-// ) => {
-//   await fastify.prisma.profile.delete({
-//     where: {
-//       id: args.id,
-//     },
-//   });
-// };
 
 // Fields
 const profileField = {
