@@ -2,10 +2,10 @@ import { GraphQLObjectType } from 'graphql';
 import { createUserField, changeUserField, deleteUserField } from '../types/userTypes.js';
 import {
   createProfileField,
-  updateProfileField,
+  changeProfileField,
   deleteProfileField,
 } from '../types/profileTypes.js';
-import { createPostField, updatePostField, deletePostField } from '../types/postTypes.js';
+import { createPostField, changePostField, deletePostField } from '../types/postTypes.js';
 
 const mutationType = new GraphQLObjectType({
   name: 'Mutation',
@@ -15,11 +15,11 @@ const mutationType = new GraphQLObjectType({
     deleteUser: deleteUserField,
 
     createProfile: createProfileField,
-    updateProfile: updateProfileField,
+    changeProfile: changeProfileField,
     deleteProfile: deleteProfileField,
 
     createPost: createPostField,
-    updatePost: updatePostField,
+    changePost: changePostField,
     deletePost: deletePostField,
 
     //Figure out later

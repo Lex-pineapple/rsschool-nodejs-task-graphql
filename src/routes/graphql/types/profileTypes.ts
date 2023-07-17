@@ -1,7 +1,9 @@
 import { FastifyInstance } from 'fastify';
 import {
   GraphQLBoolean,
+  GraphQLInputObjectType,
   GraphQLInt,
+  GraphQLInterfaceType,
   GraphQLList,
   GraphQLNonNull,
   GraphQLObjectType,
@@ -26,18 +28,22 @@ interface IProfileTypeArgs {
 }
 
 interface ICreateProfileArgs {
-  isMale: boolean;
-  yearOfBirth: number;
-  userId: string;
-  memberTypeId: string;
+  dto: {
+    isMale: boolean;
+    yearOfBirth: number;
+    userId: string;
+    memberTypeId: string;
+  }
 }
 
 interface IUpdateProfileArgs {
   id: string;
-  isMale: boolean;
-  yearOfBirth: number;
-  userId: string;
-  memberTypeId: string;
+  dto: {
+    isMale: boolean;
+    yearOfBirth: number;
+    userId: string;
+    memberTypeId: string;
+  }
 }
 
 class Profile {
@@ -82,38 +88,44 @@ class Profile {
     },
   };
 
-  static argsCreate = {
-    isMale: {
-      type: new GraphQLNonNull(GraphQLBoolean),
-    },
-    yearOfBirth: {
-      type: new GraphQLNonNull(GraphQLInt),
-    },
-    userId: {
-      type: new GraphQLNonNull(UUIDType),
-    },
-    memberTypeId: {
-      type: new GraphQLNonNull(memberTypeId),
-    },
-  };
+  static argsCreate: GraphQLInputObjectType = new GraphQLInputObjectType({
+    name: 'CreateProfileInput',
+    fields: () => ({
+      isMale: {
+        type: new GraphQLNonNull(GraphQLBoolean),
+      },
+      yearOfBirth: {
+        type: new GraphQLNonNull(GraphQLInt),
+      },
+      userId: {
+        type: new GraphQLNonNull(UUIDType),
+      },
+      memberTypeId: {
+        type: new GraphQLNonNull(memberTypeId),
+      },
+    })
+  });
 
-  static argsUpdate = {
-    id: {
-      type: new GraphQLNonNull(UUIDType),
-    },
-    isMale: {
-      type: new GraphQLNonNull(GraphQLBoolean),
-    },
-    yearOfBirth: {
-      type: new GraphQLNonNull(GraphQLInt),
-    },
-    userId: {
-      type: new GraphQLNonNull(UUIDType),
-    },
-    memberTypeId: {
-      type: new GraphQLNonNull(memberTypeId),
-    },
-  };
+  static argsUpdate: GraphQLInputObjectType = new GraphQLInputObjectType({
+    name: 'ChangeProfileInput',
+    fields: () => ({
+      id: {
+        type: new GraphQLNonNull(UUIDType),
+      },
+      isMale: {
+        type: new GraphQLNonNull(GraphQLBoolean),
+      },
+      yearOfBirth: {
+        type: new GraphQLNonNull(GraphQLInt),
+      },
+      userId: {
+        type: new GraphQLNonNull(UUIDType),
+      },
+      memberTypeId: {
+        type: new GraphQLNonNull(memberTypeId),
+      },
+    })
+  });
 
   // Resolvers
   static getResolver = async (
@@ -164,7 +176,7 @@ class Profile {
     fastify: FastifyInstance,
   ) => {
     return fastify.prisma.profile.create({
-      data: args,
+      data: args.dto,
     });
   };
 
@@ -173,10 +185,9 @@ class Profile {
     args: IUpdateProfileArgs,
     fastify: FastifyInstance,
   ) => {
-    const { id, ...body } = args;
     return fastify.prisma.profile.update({
-      where: { id: id },
-      data: body,
+      where: { id: args.id },
+      data: args.dto,
     });
   };
 
@@ -207,18 +218,29 @@ const manyProfilesField = {
 
 const createProfileField = {
   type: Profile.type,
-  args: Profile.argsCreate,
+  args: {
+    dto: {
+      type: new GraphQLNonNull(Profile.argsCreate),
+    }
+  },
   resolve: Profile.createResolver,
 };
 
-const updateProfileField = {
+const changeProfileField = {
   type: Profile.type,
-  args: Profile.argsUpdate,
+  args: {
+    id: {
+      type: new GraphQLNonNull(UUIDType)
+    },
+    dto: {
+      type: new GraphQLNonNull(Profile.argsUpdate)
+    }
+  },
   resolve: Profile.updateResolver,
 };
 
 const deleteProfileField = {
-  type: Profile.type,
+  type: GraphQLBoolean,
   args: {
     id: { type: UUIDType },
   },
@@ -229,7 +251,7 @@ export {
   profileField,
   manyProfilesField,
   createProfileField,
-  updateProfileField,
+  changeProfileField,
   deleteProfileField,
   Profile,
 };

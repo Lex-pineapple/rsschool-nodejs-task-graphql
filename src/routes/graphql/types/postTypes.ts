@@ -1,5 +1,5 @@
 import { FastifyInstance } from 'fastify';
-import { GraphQLList, GraphQLNonNull, GraphQLObjectType, GraphQLString } from 'graphql';
+import { GraphQLBoolean, GraphQLInputObjectType, GraphQLList, GraphQLNonNull, GraphQLObjectType, GraphQLString } from 'graphql';
 import { UUIDType } from './uuid.js';
 import { IUserType, User } from './userTypes.js';
 
@@ -16,17 +16,20 @@ export interface IPostTypeArgs {
 }
 
 interface ICreatePostArgs {
-  id: string;
-  title: string;
-  content: string;
-  authorId: string;
+  dto: {
+    title: string;
+    content: string;
+    authorId: string;
+  }
 }
 
 interface IUpdatePostArgs {
   id: string;
-  title: string;
-  content: string;
-  authorId: string;
+  dto: {
+    title: string;
+    content: string;
+    authorId: string;
+  }
 }
 
 class Post {
@@ -60,35 +63,41 @@ class Post {
     id: { type: UUIDType },
   };
 
-  static argsCreate = {
-    id: {
-      type: new GraphQLNonNull(UUIDType),
-    },
-    title: {
-      type: new GraphQLNonNull(GraphQLString),
-    },
-    content: {
-      type: new GraphQLNonNull(GraphQLString),
-    },
-    authorId: {
-      type: new GraphQLNonNull(UUIDType),
-    },
-  };
+  static argsCreate = new GraphQLInputObjectType({
+    name: 'CreatePostInput',
+    fields: () => ({
+      id: {
+        type: new GraphQLNonNull(UUIDType),
+      },
+      title: {
+        type: new GraphQLNonNull(GraphQLString),
+      },
+      content: {
+        type: new GraphQLNonNull(GraphQLString),
+      },
+      authorId: {
+        type: new GraphQLNonNull(UUIDType),
+      },
+    })
+  });
 
-  static argsUpdate = {
-    id: {
-      type: UUIDType,
-    },
-    title: {
-      type: GraphQLString,
-    },
-    content: {
-      type: GraphQLString,
-    },
-    authorId: {
-      type: UUIDType,
-    },
-  };
+  static argsUpdate = new GraphQLInputObjectType({
+    name: 'ChangePostInput',
+    fields: () => ({
+      id: {
+        type: UUIDType,
+      },
+      title: {
+        type: GraphQLString,
+      },
+      content: {
+        type: GraphQLString,
+      },
+      authorId: {
+        type: UUIDType,
+      },
+    })
+  });
 
   // Resolvers
   static getResolver = async (_parent, args: IPostTypeArgs, fastify: FastifyInstance) => {
@@ -122,7 +131,7 @@ class Post {
     fastify: FastifyInstance,
   ) => {
     return fastify.prisma.post.create({
-      data: args,
+      data: args.dto,
     });
   };
 
@@ -131,10 +140,9 @@ class Post {
     args: IUpdatePostArgs,
     fastify: FastifyInstance,
   ) => {
-    const { id, ...body } = args;
     return fastify.prisma.post.update({
-      where: { id: id },
-      data: body,
+      where: { id: args.id },
+      data: args.dto,
     });
   };
 
@@ -165,18 +173,29 @@ const manyPostsField = {
 
 const createPostField = {
   type: Post.type,
-  args: Post.argsCreate,
+  args: {
+    dto: {
+      type: new GraphQLNonNull(Post.argsCreate)
+    }
+  },
   resolve: Post.createResolver,
 };
 
-const updatePostField = {
+const changePostField = {
   type: Post.type,
-  args: Post.argsUpdate,
+  args: {
+    id: {
+      type: new GraphQLNonNull(UUIDType)
+    },
+    dto: {
+      type: new GraphQLNonNull(Post.argsUpdate)
+    }
+  },
   resolve: Post.updateResolver,
 };
 
 const deletePostField = {
-  type: Post.type,
+  type: GraphQLBoolean,
   args: {
     id: { type: UUIDType },
   },
@@ -187,7 +206,7 @@ export {
   postField,
   manyPostsField,
   createPostField,
-  updatePostField,
+  changePostField,
   deletePostField,
   Post,
 };

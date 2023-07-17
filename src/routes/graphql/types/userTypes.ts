@@ -211,8 +211,6 @@ class User {
     args: IDeleteUserTypeArgs,
     fastify: FastifyInstance,
   ) => {
-    console.log(args);
-
     await fastify.prisma.user.delete({
       where: {
         id: args.id,
