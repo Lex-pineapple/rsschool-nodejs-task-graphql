@@ -1,5 +1,12 @@
 import { FastifyInstance } from 'fastify';
-import { GraphQLBoolean, GraphQLInputObjectType, GraphQLList, GraphQLNonNull, GraphQLObjectType, GraphQLString } from 'graphql';
+import {
+  GraphQLBoolean,
+  GraphQLInputObjectType,
+  GraphQLList,
+  GraphQLNonNull,
+  GraphQLObjectType,
+  GraphQLString,
+} from 'graphql';
 import { UUIDType } from './uuid.js';
 import { IUserType, User } from './userTypes.js';
 
@@ -20,7 +27,7 @@ interface ICreatePostArgs {
     title: string;
     content: string;
     authorId: string;
-  }
+  };
 }
 
 interface IUpdatePostArgs {
@@ -29,7 +36,7 @@ interface IUpdatePostArgs {
     title: string;
     content: string;
     authorId: string;
-  }
+  };
 }
 
 class Post {
@@ -66,9 +73,6 @@ class Post {
   static argsCreate = new GraphQLInputObjectType({
     name: 'CreatePostInput',
     fields: () => ({
-      id: {
-        type: new GraphQLNonNull(UUIDType),
-      },
       title: {
         type: new GraphQLNonNull(GraphQLString),
       },
@@ -78,15 +82,12 @@ class Post {
       authorId: {
         type: new GraphQLNonNull(UUIDType),
       },
-    })
+    }),
   });
 
   static argsUpdate = new GraphQLInputObjectType({
     name: 'ChangePostInput',
     fields: () => ({
-      id: {
-        type: UUIDType,
-      },
       title: {
         type: GraphQLString,
       },
@@ -96,7 +97,7 @@ class Post {
       authorId: {
         type: UUIDType,
       },
-    })
+    }),
   });
 
   // Resolvers
@@ -175,8 +176,8 @@ const createPostField = {
   type: Post.type,
   args: {
     dto: {
-      type: new GraphQLNonNull(Post.argsCreate)
-    }
+      type: new GraphQLNonNull(Post.argsCreate),
+    },
   },
   resolve: Post.createResolver,
 };
@@ -185,11 +186,11 @@ const changePostField = {
   type: Post.type,
   args: {
     id: {
-      type: new GraphQLNonNull(UUIDType)
+      type: new GraphQLNonNull(UUIDType),
     },
     dto: {
-      type: new GraphQLNonNull(Post.argsUpdate)
-    }
+      type: new GraphQLNonNull(Post.argsUpdate),
+    },
   },
   resolve: Post.updateResolver,
 };

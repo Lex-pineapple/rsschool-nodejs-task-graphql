@@ -173,6 +173,8 @@ await test('gql-mutations', async (t) => {
 
     t.ok(errors.length === 1);
     const message = errors[0].message as string;
+    console.log(message);
+
     t.ok(
       message.includes(`Field \"userId\" is not defined by type \"ChangeProfileInput\"`),
     );

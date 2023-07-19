@@ -3,7 +3,6 @@ import {
   GraphQLBoolean,
   GraphQLInputObjectType,
   GraphQLInt,
-  GraphQLInterfaceType,
   GraphQLList,
   GraphQLNonNull,
   GraphQLObjectType,
@@ -33,7 +32,7 @@ interface ICreateProfileArgs {
     yearOfBirth: number;
     userId: string;
     memberTypeId: string;
-  }
+  };
 }
 
 interface IUpdateProfileArgs {
@@ -43,7 +42,7 @@ interface IUpdateProfileArgs {
     yearOfBirth: number;
     userId: string;
     memberTypeId: string;
-  }
+  };
 }
 
 class Profile {
@@ -103,28 +102,25 @@ class Profile {
       memberTypeId: {
         type: new GraphQLNonNull(memberTypeId),
       },
-    })
+    }),
   });
 
   static argsUpdate: GraphQLInputObjectType = new GraphQLInputObjectType({
     name: 'ChangeProfileInput',
     fields: () => ({
-      id: {
-        type: new GraphQLNonNull(UUIDType),
-      },
       isMale: {
-        type: new GraphQLNonNull(GraphQLBoolean),
+        type: GraphQLBoolean,
       },
       yearOfBirth: {
-        type: new GraphQLNonNull(GraphQLInt),
+        type: GraphQLInt,
       },
       userId: {
-        type: new GraphQLNonNull(UUIDType),
+        type: UUIDType,
       },
       memberTypeId: {
-        type: new GraphQLNonNull(memberTypeId),
+        type: memberTypeId,
       },
-    })
+    }),
   });
 
   // Resolvers
@@ -221,7 +217,7 @@ const createProfileField = {
   args: {
     dto: {
       type: new GraphQLNonNull(Profile.argsCreate),
-    }
+    },
   },
   resolve: Profile.createResolver,
 };
@@ -230,11 +226,11 @@ const changeProfileField = {
   type: Profile.type,
   args: {
     id: {
-      type: new GraphQLNonNull(UUIDType)
+      type: new GraphQLNonNull(UUIDType),
     },
     dto: {
-      type: new GraphQLNonNull(Profile.argsUpdate)
-    }
+      type: new GraphQLNonNull(Profile.argsUpdate),
+    },
   },
   resolve: Profile.updateResolver,
 };
