@@ -94,9 +94,6 @@ class Post {
       content: {
         type: GraphQLString,
       },
-      authorId: {
-        type: UUIDType,
-      },
     }),
   });
 

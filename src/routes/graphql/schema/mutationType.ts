@@ -1,5 +1,11 @@
 import { GraphQLObjectType } from 'graphql';
-import { createUserField, changeUserField, deleteUserField } from '../types/userTypes.js';
+import {
+  createUserField,
+  changeUserField,
+  deleteUserField,
+  subscribeToField,
+  unsubscribeFromField,
+} from '../types/userTypes.js';
 import {
   createProfileField,
   changeProfileField,
@@ -21,6 +27,9 @@ const mutationType = new GraphQLObjectType({
     createPost: createPostField,
     changePost: changePostField,
     deletePost: deletePostField,
+
+    subscribeTo: subscribeToField,
+    unsubscribeFrom: unsubscribeFromField,
 
     //Figure out later
     // createMemberType:

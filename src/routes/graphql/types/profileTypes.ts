@@ -114,12 +114,6 @@ class Profile {
       yearOfBirth: {
         type: GraphQLInt,
       },
-      userId: {
-        type: UUIDType,
-      },
-      memberTypeId: {
-        type: memberTypeId,
-      },
     }),
   });
 

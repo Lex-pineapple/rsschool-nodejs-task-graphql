@@ -46,6 +46,11 @@ export interface IUpdateUserArgs {
   };
 }
 
+export interface ISubscribeArgs {
+  userId: string;
+  authorId: string;
+}
+
 class User {
   // Types
   static type: GraphQLObjectType = new GraphQLObjectType({
@@ -218,6 +223,53 @@ class User {
     });
     return null;
   };
+
+  static subscribeResolver = async (
+    _parent,
+    args: ISubscribeArgs,
+    fastify: FastifyInstance,
+  ) => {
+    // return await fastify.prisma.user.update({
+    //   where: { id: args.authorId },
+    //   data: {
+    //     subscribedToUser: {
+    //       create: {
+    //         subscriberId: args.userId,
+    //       },
+    //     },
+    //   },
+    // });
+
+    return fastify.prisma.user.update({
+      where: { id: args.userId },
+      data: {
+        userSubscribedTo: {
+          create: {
+            authorId: args.authorId,
+          },
+        },
+      },
+    });
+  };
+
+  static unsubscribeResolver = async (
+    _parent,
+    args: ISubscribeArgs,
+    fastify: FastifyInstance,
+  ) => {
+    await fastify.prisma.user.update({
+      where: {
+        id: args.userId,
+      },
+      data: {
+        userSubscribedTo: {
+          deleteMany: {
+            authorId: args.authorId,
+          },
+        },
+      },
+    });
+  };
 }
 
 // Fields
@@ -263,11 +315,39 @@ const deleteUserField = {
   resolve: User.deleteResolver,
 };
 
+const subscribeToField = {
+  type: User.type,
+  args: {
+    userId: {
+      type: new GraphQLNonNull(UUIDType),
+    },
+    authorId: {
+      type: new GraphQLNonNull(UUIDType),
+    },
+  },
+  resolve: User.subscribeResolver,
+};
+
+const unsubscribeFromField = {
+  type: GraphQLBoolean,
+  args: {
+    userId: {
+      type: new GraphQLNonNull(UUIDType),
+    },
+    authorId: {
+      type: new GraphQLNonNull(UUIDType),
+    },
+  },
+  resolve: User.unsubscribeResolver,
+};
+
 export {
   userField,
   manyUsersField,
   createUserField,
   changeUserField,
   deleteUserField,
+  subscribeToField,
+  unsubscribeFromField,
   User,
 };
