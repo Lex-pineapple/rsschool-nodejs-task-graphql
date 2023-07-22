@@ -155,7 +155,13 @@ class Profile {
     _args,
     { fastify, dataloaders }: IGraphqlContext,
   ) => {
-    return dataloaders.profilesLoader.load(parent.id);
+    return await dataloaders.profilesLoader.load(parent.id);
+    // const profile = await fastify.prisma.profile.findUnique({
+    //   where: {
+    //     userId: parent.id,
+    //   },
+    // });
+    // return profile;
   };
 
   static profileFromMemberTypeResolver = async (

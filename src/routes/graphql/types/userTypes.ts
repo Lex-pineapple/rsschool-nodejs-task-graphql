@@ -6,12 +6,18 @@ import {
   GraphQLList,
   GraphQLNonNull,
   GraphQLObjectType,
+  GraphQLResolveInfo,
   GraphQLString,
 } from 'graphql';
 import { UUIDType } from './uuid.js';
 import { IProfileType, Profile } from './profileTypes.js';
 import { IPostType, Post } from './postTypes.js';
 import { IGraphqlContext } from '../dataloaders.js';
+import {
+  ResolveTree,
+  parseResolveInfo,
+  simplifyParsedResolveInfoFragmentWithType,
+} from 'graphql-parse-resolve-info';
 
 export interface IUser {
   id: string;
@@ -20,6 +26,16 @@ export interface IUser {
 }
 
 // Interfaces
+export interface ISubscribeTypes {
+  subscribedToUser: ISubscribeInfo[];
+  userSubscribedTo: ISubscribeInfo[];
+}
+
+export interface ISubscribeInfo {
+  subscriberId: string;
+  authorId: string;
+}
+
 export interface IUserType {
   id: string;
   name: string;
@@ -128,12 +144,13 @@ class User {
     args: IUserTypeArgs,
     { fastify, dataloaders }: IGraphqlContext,
   ) => {
-    const user = await fastify.prisma.user.findUnique({
-      where: {
-        id: args.id,
-      },
-    });
-    return user;
+    return dataloaders.usersLoader.load(args.id);
+    // const user = await fastify.prisma.user.findUnique({
+    //   where: {
+    //     id: args.id,
+    //   },
+    // });
+    // return user;
   };
 
   static usersFromProfileResolver = async (
@@ -166,40 +183,50 @@ class User {
     _parent,
     _args,
     { fastify, dataloaders }: IGraphqlContext,
+    resolveInfo: GraphQLResolveInfo,
   ) => {
-    return fastify.prisma.user.findMany();
+    const parsedResolveInfoFragment = parseResolveInfo(resolveInfo);
+    const { fields } = simplifyParsedResolveInfoFragmentWithType(
+      parsedResolveInfoFragment as ResolveTree,
+      new GraphQLList(User.type),
+    );
+
+    // return fastify.prisma.user.findMany();
+    return fastify.prisma.user.findMany({
+      include: {
+        subscribedToUser:
+          'subscribedToUser' in fields && fields.subscribedToUser ? true : false,
+        userSubscribedTo:
+          'userSubscribedTo' in fields && fields.userSubscribedTo ? true : false,
+      },
+    });
   };
 
   static subscribedToUserResolver = async (
-    parent: IUserTypeArgs,
+    parent: IUserType | ISubscribeTypes,
     _args,
     { fastify, dataloaders }: IGraphqlContext,
   ) => {
-    return fastify.prisma.user.findMany({
-      where: {
-        userSubscribedTo: {
-          some: {
-            authorId: parent.id,
-          },
-        },
-      },
-    });
+    if (parent.subscribedToUser) {
+      const paerntIds = parent.subscribedToUser.map(
+        (item) => (item as ISubscribeInfo).subscriberId,
+      );
+      const res = dataloaders.usersLoader.loadMany(paerntIds);
+      return res;
+    }
   };
 
   static userSubscribedToResolver = async (
-    parent: IUserTypeArgs,
+    parent: IUserType | ISubscribeTypes,
     _args,
     { fastify, dataloaders }: IGraphqlContext,
   ) => {
-    return fastify.prisma.user.findMany({
-      where: {
-        subscribedToUser: {
-          some: {
-            subscriberId: parent.id,
-          },
-        },
-      },
-    });
+    if (parent.userSubscribedTo) {
+      const paerntIds = parent.userSubscribedTo.map(
+        (item) => (item as ISubscribeInfo).authorId,
+      );
+      return dataloaders.usersLoader.loadMany(paerntIds);
+    }
   };
 
   static createResolver = async (

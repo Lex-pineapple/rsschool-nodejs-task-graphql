@@ -10,8 +10,6 @@ export interface IDataloaders {
   profilesLoader: DataLoader<string, IProfile, string>;
   postsLoader: DataLoader<string, IPost, string>;
   memberTypeLoader: DataLoader<string, IMemberTypeResolve, string>;
-  subscribedToUserLoader: DataLoader<string, IUser[], string>;
-  userSubscribedToLoader: DataLoader<string, IUser[], string>;
 }
 
 export interface IGraphqlContext {
@@ -47,8 +45,24 @@ const createDataloaders = (fastify: FastifyInstance) => {
     const results = await fastify.prisma.memberType.findMany({
       where: { id: { in: ids as string[] } },
     });
+
     return ids.map((id) => {
       let item: IMemberTypeResolve | null = null;
+      results.forEach((res) => res.id === id && (item = res));
+      return item;
+    });
+  });
+
+  const usersLoader = new DataLoader(async (ids: readonly string[]) => {
+    const results = await fastify.prisma.user.findMany({
+      where: { id: { in: ids as string[] } },
+      include: {
+        userSubscribedTo: true,
+        subscribedToUser: true,
+      },
+    });
+    return ids.map((id) => {
+      let item: IUser | null = null;
       results.forEach((res) => res.id === id && (item = res));
       return item;
     });
@@ -58,6 +72,7 @@ const createDataloaders = (fastify: FastifyInstance) => {
     profilesLoader,
     postsLoader,
     memberTypeLoader,
+    usersLoader,
   };
 };
 
