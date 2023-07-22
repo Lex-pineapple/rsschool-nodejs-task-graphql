@@ -11,6 +11,17 @@ import { UUIDType } from './uuid.js';
 import { memberTypeId } from './memberTypeId.js';
 import { IMemberType, MemberType } from './memberTypeType.js';
 import { IUserType, User } from './userTypes.js';
+import DataLoader from 'dataloader';
+import { IPost } from './postTypes.js';
+import { IGraphqlContext } from '../dataloaders.js';
+
+export interface IProfile {
+  id: string;
+  isMale: boolean;
+  yearOfBirth: number;
+  userId: string;
+  memberTypeId: string;
+}
 
 export interface IProfileType {
   id: string;
@@ -121,7 +132,7 @@ class Profile {
   static getResolver = async (
     _parent,
     args: IProfileTypeArgs,
-    fastify: FastifyInstance,
+    { fastify, dataloaders }: IGraphqlContext,
   ) => {
     const profile = await fastify.prisma.profile.findUnique({
       where: {
@@ -131,21 +142,26 @@ class Profile {
     return profile;
   };
 
-  static getManyResolver = async (_parent, _args, fastify: FastifyInstance) => {
+  static getManyResolver = async (
+    _parent,
+    _args,
+    { fastify, dataloaders }: IGraphqlContext,
+  ) => {
     return fastify.prisma.profile.findMany();
   };
 
   static profileFromParentResolver = async (
     parent: IUserType,
     _args,
-    fastify: FastifyInstance,
+    { fastify, dataloaders }: IGraphqlContext,
   ) => {
-    const profile = await fastify.prisma.profile.findUnique({
-      where: {
-        userId: parent.id,
-      },
-    });
-    return profile;
+    return await dataloaders.profilesLoader.load(parent.id);
+    // const profile = await fastify.prisma.profile.findUnique({
+    //   where: {
+    //     userId: parent.id,
+    //   },
+    // });
+    // return profile;
   };
 
   static profileFromMemberTypeResolver = async (
@@ -163,7 +179,7 @@ class Profile {
   static createResolver = async (
     _parent,
     args: ICreateProfileArgs,
-    fastify: FastifyInstance,
+    { fastify, dataloaders }: IGraphqlContext,
   ) => {
     return fastify.prisma.profile.create({
       data: args.dto,
@@ -173,7 +189,7 @@ class Profile {
   static updateResolver = async (
     _parent,
     args: IUpdateProfileArgs,
-    fastify: FastifyInstance,
+    { fastify, dataloaders }: IGraphqlContext,
   ) => {
     return fastify.prisma.profile.update({
       where: { id: args.id },
@@ -184,7 +200,7 @@ class Profile {
   static deleteResolver = async (
     _parent,
     args: IProfileTypeArgs,
-    fastify: FastifyInstance,
+    { fastify, dataloaders }: IGraphqlContext,
   ) => {
     await fastify.prisma.profile.delete({
       where: {

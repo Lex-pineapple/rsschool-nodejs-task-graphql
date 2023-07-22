@@ -9,6 +9,16 @@ import {
 } from 'graphql';
 import { UUIDType } from './uuid.js';
 import { IUserType, User } from './userTypes.js';
+import DataLoader from 'dataloader';
+import { IProfile } from './profileTypes.js';
+import { IGraphqlContext } from '../dataloaders.js';
+
+export interface IPost {
+  id: string;
+  title: string;
+  content: string;
+  authorId: string;
+}
 
 export interface IPostType {
   id: string;
@@ -98,7 +108,11 @@ class Post {
   });
 
   // Resolvers
-  static getResolver = async (_parent, args: IPostTypeArgs, fastify: FastifyInstance) => {
+  static getResolver = async (
+    _parent,
+    args: IPostTypeArgs,
+    { fastify, dataloaders }: IGraphqlContext,
+  ) => {
     const post = await fastify.prisma.post.findUnique({
       where: {
         id: args.id,
@@ -110,23 +124,28 @@ class Post {
   static postFromParentResolver = async (
     parent: IUserType,
     _args,
-    fastify: FastifyInstance,
+    { fastify, dataloaders }: IGraphqlContext,
   ) => {
-    return fastify.prisma.post.findMany({
-      where: {
-        authorId: parent.id,
-      },
-    });
+    return await dataloaders.postsLoader.load(parent.id);
+    // return fastify.prisma.post.findMany({
+    //   where: {
+    //     authorId: parent.id,
+    //   },
+    // });
   };
 
-  static getManyResolver = async (_parent, _args, fastify: FastifyInstance) => {
+  static getManyResolver = async (
+    _parent,
+    _args,
+    { fastify, dataloaders }: IGraphqlContext,
+  ) => {
     return fastify.prisma.post.findMany();
   };
 
   static createResolver = async (
     _parent,
     args: ICreatePostArgs,
-    fastify: FastifyInstance,
+    { fastify, dataloaders }: IGraphqlContext,
   ) => {
     return fastify.prisma.post.create({
       data: args.dto,
@@ -136,7 +155,7 @@ class Post {
   static updateResolver = async (
     _parent,
     args: IUpdatePostArgs,
-    fastify: FastifyInstance,
+    { fastify, dataloaders }: IGraphqlContext,
   ) => {
     return fastify.prisma.post.update({
       where: { id: args.id },
@@ -147,7 +166,7 @@ class Post {
   static deleteResolver = async (
     _parent,
     args: IPostTypeArgs,
-    fastify: FastifyInstance,
+    { fastify, dataloaders }: IGraphqlContext,
   ) => {
     await fastify.prisma.post.delete({
       where: {

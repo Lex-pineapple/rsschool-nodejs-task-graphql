@@ -11,6 +11,13 @@ import {
 import { UUIDType } from './uuid.js';
 import { IProfileType, Profile } from './profileTypes.js';
 import { IPostType, Post } from './postTypes.js';
+import { IGraphqlContext } from '../dataloaders.js';
+
+export interface IUser {
+  id: string;
+  name: string;
+  balance: number;
+}
 
 // Interfaces
 export interface IUserType {
@@ -116,7 +123,11 @@ class User {
   });
 
   // Resolvers
-  static getResolver = async (_parent, args: IUserTypeArgs, fastify: FastifyInstance) => {
+  static getResolver = async (
+    _parent,
+    args: IUserTypeArgs,
+    { fastify, dataloaders }: IGraphqlContext,
+  ) => {
     const user = await fastify.prisma.user.findUnique({
       where: {
         id: args.id,
@@ -131,7 +142,7 @@ class User {
   static usersFromProfileResolver = async (
     parent: IProfileType,
     _args,
-    fastify: FastifyInstance,
+    { fastify, dataloaders }: IGraphqlContext,
   ) => {
     const user = await fastify.prisma.user.findUnique({
       where: {
@@ -146,7 +157,7 @@ class User {
     _args,
     fastify: FastifyInstance,
   ) => {
-    const user = await fastify.prisma.user.findUnique({
+    const user = await fastify.prisma.user.findMany({
       where: {
         id: parent.authorId,
       },
@@ -154,46 +165,52 @@ class User {
     return user;
   };
 
-  static getManyResolver = async (_parent, _args, fastify: FastifyInstance) => {
+  static getManyResolver = async (
+    _parent,
+    _args,
+    { fastify, dataloaders }: IGraphqlContext,
+  ) => {
     return fastify.prisma.user.findMany();
   };
 
   static subscribedToUserResolver = async (
     parent: IUserTypeArgs,
     _args,
-    fastify: FastifyInstance,
+    { fastify, dataloaders }: IGraphqlContext,
   ) => {
-    return fastify.prisma.user.findMany({
-      where: {
-        userSubscribedTo: {
-          some: {
-            authorId: parent.id,
-          },
-        },
-      },
-    });
+    return await dataloaders.subscribedToUserLoader.load(parent.id);
+    // return fastify.prisma.user.findMany({
+    //   where: {
+    //     userSubscribedTo: {
+    //       some: {
+    //         authorId: parent.id,
+    //       },
+    //     },
+    //   },
+    // });
   };
 
   static userSubscribedToResolver = async (
     parent: IUserTypeArgs,
     _args,
-    fastify: FastifyInstance,
+    { fastify, dataloaders }: IGraphqlContext,
   ) => {
-    return fastify.prisma.user.findMany({
-      where: {
-        subscribedToUser: {
-          some: {
-            subscriberId: parent.id,
-          },
-        },
-      },
-    });
+    return await dataloaders.userSubscribedToLoader.load(parent.id);
+    // return fastify.prisma.user.findMany({
+    //   where: {
+    //     subscribedToUser: {
+    //       some: {
+    //         subscriberId: parent.id,
+    //       },
+    //     },
+    //   },
+    // });
   };
 
   static createResolver = async (
     _parent,
     args: ICreateUserArgs,
-    fastify: FastifyInstance,
+    { fastify, dataloaders }: IGraphqlContext,
   ) => {
     return fastify.prisma.user.create({
       data: args.dto,
@@ -203,7 +220,7 @@ class User {
   static updateResolver = async (
     _parent,
     args: IUpdateUserArgs,
-    fastify: FastifyInstance,
+    { fastify, dataloaders }: IGraphqlContext,
   ) => {
     return fastify.prisma.user.update({
       where: { id: args.id },
@@ -214,7 +231,7 @@ class User {
   static deleteResolver = async (
     _parent,
     args: IDeleteUserTypeArgs,
-    fastify: FastifyInstance,
+    { fastify, dataloaders }: IGraphqlContext,
   ) => {
     await fastify.prisma.user.delete({
       where: {
@@ -227,7 +244,7 @@ class User {
   static subscribeResolver = async (
     _parent,
     args: ISubscribeArgs,
-    fastify: FastifyInstance,
+    { fastify, dataloaders }: IGraphqlContext,
   ) => {
     // return await fastify.prisma.user.update({
     //   where: { id: args.authorId },
@@ -255,7 +272,7 @@ class User {
   static unsubscribeResolver = async (
     _parent,
     args: ISubscribeArgs,
-    fastify: FastifyInstance,
+    { fastify, dataloaders }: IGraphqlContext,
   ) => {
     await fastify.prisma.user.update({
       where: {

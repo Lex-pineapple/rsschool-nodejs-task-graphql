@@ -3,6 +3,7 @@ import { createGqlResponseSchema, gqlResponseSchema } from './schemas.js';
 import { graphql, parse, validate } from 'graphql';
 import schema from './schema/graphQLSchema.js';
 import depthLimit from 'graphql-depth-limit';
+import { createDataloaders } from './dataloaders.js';
 
 const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
   fastify.route({
@@ -15,12 +16,13 @@ const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
       },
     },
     async handler(req) {
+      const dataloaders = createDataloaders(fastify);
       const validationError = validate(schema, parse(req.body.query), [depthLimit(5)]);
       if (validationError.length > 0) return { errors: validationError };
       return await graphql({
         schema,
         source: String(req.body.query),
-        contextValue: { fastify },
+        contextValue: { fastify, dataloaders },
         variableValues: req.body.variables,
       });
     },

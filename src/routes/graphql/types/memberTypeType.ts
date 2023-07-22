@@ -8,6 +8,13 @@ import {
 } from 'graphql';
 import { memberTypeId } from './memberTypeId.js';
 import { IProfileType, Profile } from './profileTypes.js';
+import { IGraphqlContext } from '../dataloaders.js';
+
+export interface IMemberTypeResolve {
+  id: string;
+  discount: number;
+  postsLimitPerMonth: number;
+}
 
 export interface IMemberType {
   id: string;
@@ -54,7 +61,7 @@ class MemberType {
   static getResolver = async (
     _parent,
     args: IMemberTypeArgs,
-    fastify: FastifyInstance,
+    { fastify, dataloaders }: IGraphqlContext,
   ) => {
     const memberType = await fastify.prisma.memberType.findUnique({
       where: {
@@ -67,17 +74,23 @@ class MemberType {
   static memberTypeFromProfileResolver = async (
     parent: IProfileType,
     _args,
-    fastify: FastifyInstance,
+    { fastify, dataloaders }: IGraphqlContext,
   ) => {
-    const memberType = await fastify.prisma.memberType.findUnique({
-      where: {
-        id: parent.memberTypeId,
-      },
-    });
-    return memberType;
+    return await dataloaders.memberTypeLoader.load(parent.memberTypeId);
+    // const memberType = await fastify.prisma.memberType.findUnique({
+    //   where: {
+    //     id: parent.memberTypeId,
+    //   },
+    // });
+
+    // return memberType;
   };
 
-  static getManyResolver = async (_parent, _args, fastify: FastifyInstance) => {
+  static getManyResolver = async (
+    _parent,
+    _args,
+    { fastify, dataloaders }: IGraphqlContext,
+  ) => {
     return fastify.prisma.memberType.findMany();
   };
 }
