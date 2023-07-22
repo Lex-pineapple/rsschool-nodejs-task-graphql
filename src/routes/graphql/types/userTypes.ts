@@ -133,9 +133,6 @@ class User {
         id: args.id,
       },
     });
-    // if (user === null) {
-    //   throw fastify.httpErrors.notFound();
-    // }
     return user;
   };
 
@@ -178,16 +175,15 @@ class User {
     _args,
     { fastify, dataloaders }: IGraphqlContext,
   ) => {
-    return await dataloaders.subscribedToUserLoader.load(parent.id);
-    // return fastify.prisma.user.findMany({
-    //   where: {
-    //     userSubscribedTo: {
-    //       some: {
-    //         authorId: parent.id,
-    //       },
-    //     },
-    //   },
-    // });
+    return fastify.prisma.user.findMany({
+      where: {
+        userSubscribedTo: {
+          some: {
+            authorId: parent.id,
+          },
+        },
+      },
+    });
   };
 
   static userSubscribedToResolver = async (
@@ -195,16 +191,15 @@ class User {
     _args,
     { fastify, dataloaders }: IGraphqlContext,
   ) => {
-    return await dataloaders.userSubscribedToLoader.load(parent.id);
-    // return fastify.prisma.user.findMany({
-    //   where: {
-    //     subscribedToUser: {
-    //       some: {
-    //         subscriberId: parent.id,
-    //       },
-    //     },
-    //   },
-    // });
+    return fastify.prisma.user.findMany({
+      where: {
+        subscribedToUser: {
+          some: {
+            subscriberId: parent.id,
+          },
+        },
+      },
+    });
   };
 
   static createResolver = async (
@@ -246,17 +241,6 @@ class User {
     args: ISubscribeArgs,
     { fastify, dataloaders }: IGraphqlContext,
   ) => {
-    // return await fastify.prisma.user.update({
-    //   where: { id: args.authorId },
-    //   data: {
-    //     subscribedToUser: {
-    //       create: {
-    //         subscriberId: args.userId,
-    //       },
-    //     },
-    //   },
-    // });
-
     return fastify.prisma.user.update({
       where: { id: args.userId },
       data: {

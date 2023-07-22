@@ -20,81 +20,44 @@ export interface IGraphqlContext {
 }
 
 const createDataloaders = (fastify: FastifyInstance) => {
-  const usersLoader = new DataLoader(async (ids: readonly string[]) => {
-    const result = ids.map(async (id) => {
-      return await fastify.prisma.user.findMany({
-        where: { id },
-      });
-    });
-    return result;
-  });
   const profilesLoader = new DataLoader(async (ids: readonly string[]) => {
-    const result = ids.map(async (id) => {
-      const profile = await fastify.prisma.profile.findMany({
-        where: { userId: id },
-      });
-      return profile[0];
+    const results = await fastify.prisma.profile.findMany({
+      where: { userId: { in: ids as string[] } },
     });
 
-    return result;
+    return ids.map((id) => {
+      let item: IProfile | null = null;
+      results.forEach((res) => res.userId == id && (item = res));
+      return item;
+    });
   });
 
   const postsLoader = new DataLoader(async (ids: readonly string[]) => {
-    const result = ids.map(async (id) => {
-      return await fastify.prisma.post.findMany({
-        where: { authorId: id },
-      });
+    const results = await fastify.prisma.post.findMany({
+      where: { authorId: { in: ids as string[] } },
     });
-    return result;
+    return ids.map((id) => {
+      const arr: IPost[] = [];
+      results.forEach((res) => res.authorId == id && arr.push(res));
+      return arr;
+    });
   });
 
   const memberTypeLoader = new DataLoader(async (ids: readonly string[]) => {
-    const result = ids.map(async (id) => {
-      const memberType = await fastify.prisma.memberType.findMany({
-        where: { id },
-      });
-      return memberType[0];
+    const results = await fastify.prisma.memberType.findMany({
+      where: { id: { in: ids as string[] } },
     });
-    return result;
-  });
-
-  const subscribedToUserLoader = new DataLoader(async (ids: readonly string[]) => {
-    const result = ids.map(async (id) => {
-      return await fastify.prisma.user.findMany({
-        where: {
-          userSubscribedTo: {
-            some: {
-              authorId: id,
-            },
-          },
-        },
-      });
+    return ids.map((id) => {
+      let item: IMemberTypeResolve | null = null;
+      results.forEach((res) => res.id === id && (item = res));
+      return item;
     });
-    return result;
-  });
-
-  const userSubscribedToLoader = new DataLoader(async (ids: readonly string[]) => {
-    const result = ids.map(async (id) => {
-      return fastify.prisma.user.findMany({
-        where: {
-          subscribedToUser: {
-            some: {
-              subscriberId: id,
-            },
-          },
-        },
-      });
-    });
-    return result;
   });
 
   return {
-    usersLoader,
     profilesLoader,
     postsLoader,
     memberTypeLoader,
-    subscribedToUserLoader,
-    userSubscribedToLoader,
   };
 };
 

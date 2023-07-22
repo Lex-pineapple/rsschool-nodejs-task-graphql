@@ -126,12 +126,7 @@ class Post {
     _args,
     { fastify, dataloaders }: IGraphqlContext,
   ) => {
-    return await dataloaders.postsLoader.load(parent.id);
-    // return fastify.prisma.post.findMany({
-    //   where: {
-    //     authorId: parent.id,
-    //   },
-    // });
+    return dataloaders.postsLoader.load(parent.id);
   };
 
   static getManyResolver = async (
