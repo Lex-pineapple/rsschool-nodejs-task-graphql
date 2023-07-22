@@ -145,12 +145,6 @@ class User {
     { fastify, dataloaders }: IGraphqlContext,
   ) => {
     return dataloaders.usersLoader.load(args.id);
-    // const user = await fastify.prisma.user.findUnique({
-    //   where: {
-    //     id: args.id,
-    //   },
-    // });
-    // return user;
   };
 
   static usersFromProfileResolver = async (
@@ -190,9 +184,7 @@ class User {
       parsedResolveInfoFragment as ResolveTree,
       new GraphQLList(User.type),
     );
-
-    // return fastify.prisma.user.findMany();
-    return fastify.prisma.user.findMany({
+    const result = await fastify.prisma.user.findMany({
       include: {
         subscribedToUser:
           'subscribedToUser' in fields && fields.subscribedToUser ? true : false,
@@ -200,6 +192,12 @@ class User {
           'userSubscribedTo' in fields && fields.userSubscribedTo ? true : false,
       },
     });
+
+    result.forEach((res) => {
+      dataloaders.usersLoader.prime(res.id, res);
+    });
+
+    return result;
   };
 
   static subscribedToUserResolver = async (
