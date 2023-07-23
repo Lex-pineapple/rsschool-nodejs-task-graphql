@@ -144,13 +144,13 @@ class User {
     args: IUserTypeArgs,
     { fastify, dataloaders }: IGraphqlContext,
   ) => {
-    return dataloaders.usersLoader.load(args.id);
+    return dataloaders?.usersLoader.load(args.id);
   };
 
   static usersFromProfileResolver = async (
     parent: IProfileType,
     _args,
-    { fastify, dataloaders }: IGraphqlContext,
+    { fastify }: IGraphqlContext,
   ) => {
     const user = await fastify.prisma.user.findUnique({
       where: {
@@ -194,7 +194,7 @@ class User {
     });
 
     result.forEach((res) => {
-      dataloaders.usersLoader.prime(res.id, res);
+      dataloaders?.usersLoader.prime(res.id, res);
     });
 
     return result;
@@ -209,7 +209,7 @@ class User {
       const paerntIds = parent.subscribedToUser.map(
         (item) => (item as ISubscribeInfo).subscriberId,
       );
-      const res = dataloaders.usersLoader.loadMany(paerntIds);
+      const res = dataloaders?.usersLoader.loadMany(paerntIds);
       return res;
     }
   };
@@ -223,14 +223,14 @@ class User {
       const paerntIds = parent.userSubscribedTo.map(
         (item) => (item as ISubscribeInfo).authorId,
       );
-      return dataloaders.usersLoader.loadMany(paerntIds);
+      return dataloaders?.usersLoader.loadMany(paerntIds);
     }
   };
 
   static createResolver = async (
     _parent,
     args: ICreateUserArgs,
-    { fastify, dataloaders }: IGraphqlContext,
+    { fastify }: IGraphqlContext,
   ) => {
     return fastify.prisma.user.create({
       data: args.dto,
@@ -240,7 +240,7 @@ class User {
   static updateResolver = async (
     _parent,
     args: IUpdateUserArgs,
-    { fastify, dataloaders }: IGraphqlContext,
+    { fastify }: IGraphqlContext,
   ) => {
     return fastify.prisma.user.update({
       where: { id: args.id },
@@ -251,7 +251,7 @@ class User {
   static deleteResolver = async (
     _parent,
     args: IDeleteUserTypeArgs,
-    { fastify, dataloaders }: IGraphqlContext,
+    { fastify }: IGraphqlContext,
   ) => {
     await fastify.prisma.user.delete({
       where: {
@@ -264,7 +264,7 @@ class User {
   static subscribeResolver = async (
     _parent,
     args: ISubscribeArgs,
-    { fastify, dataloaders }: IGraphqlContext,
+    { fastify }: IGraphqlContext,
   ) => {
     return fastify.prisma.user.update({
       where: { id: args.userId },
@@ -281,7 +281,7 @@ class User {
   static unsubscribeResolver = async (
     _parent,
     args: ISubscribeArgs,
-    { fastify, dataloaders }: IGraphqlContext,
+    { fastify }: IGraphqlContext,
   ) => {
     await fastify.prisma.user.update({
       where: {

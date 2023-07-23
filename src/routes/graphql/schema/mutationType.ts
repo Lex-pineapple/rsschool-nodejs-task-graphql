@@ -30,11 +30,6 @@ const mutationType = new GraphQLObjectType({
 
     subscribeTo: subscribeToField,
     unsubscribeFrom: unsubscribeFromField,
-
-    //Figure out later
-    // createMemberType:
-    //updateMemberType:
-    //deleteMemberType:
   },
 });
 

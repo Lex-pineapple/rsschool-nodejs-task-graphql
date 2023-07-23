@@ -1,4 +1,3 @@
-import { FastifyInstance } from 'fastify';
 import {
   GraphQLFloat,
   GraphQLInt,
@@ -61,7 +60,7 @@ class MemberType {
   static getResolver = async (
     _parent,
     args: IMemberTypeArgs,
-    { fastify, dataloaders }: IGraphqlContext,
+    { fastify }: IGraphqlContext,
   ) => {
     const memberType = await fastify.prisma.memberType.findUnique({
       where: {
@@ -76,21 +75,10 @@ class MemberType {
     _args,
     { fastify, dataloaders }: IGraphqlContext,
   ) => {
-    return await dataloaders.memberTypeLoader.load(parent.memberTypeId);
-    // const memberType = await fastify.prisma.memberType.findUnique({
-    //   where: {
-    //     id: parent.memberTypeId,
-    //   },
-    // });
-
-    // return memberType;
+    return await dataloaders?.memberTypeLoader.load(parent.memberTypeId);
   };
 
-  static getManyResolver = async (
-    _parent,
-    _args,
-    { fastify, dataloaders }: IGraphqlContext,
-  ) => {
+  static getManyResolver = async (_parent, _args, { fastify }: IGraphqlContext) => {
     return fastify.prisma.memberType.findMany();
   };
 }

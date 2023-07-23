@@ -1,4 +1,3 @@
-import { FastifyInstance } from 'fastify';
 import {
   GraphQLBoolean,
   GraphQLInputObjectType,
@@ -9,8 +8,6 @@ import {
 } from 'graphql';
 import { UUIDType } from './uuid.js';
 import { IUserType, User } from './userTypes.js';
-import DataLoader from 'dataloader';
-import { IProfile } from './profileTypes.js';
 import { IGraphqlContext } from '../dataloaders.js';
 
 export interface IPost {
@@ -111,7 +108,7 @@ class Post {
   static getResolver = async (
     _parent,
     args: IPostTypeArgs,
-    { fastify, dataloaders }: IGraphqlContext,
+    { fastify }: IGraphqlContext,
   ) => {
     const post = await fastify.prisma.post.findUnique({
       where: {
@@ -126,26 +123,17 @@ class Post {
     _args,
     { fastify, dataloaders }: IGraphqlContext,
   ) => {
-    return dataloaders.postsLoader.load(parent.id);
-    // return fastify.prisma.post.findMany({
-    //   where: {
-    //     authorId: parent.id,
-    //   },
-    // });
+    return dataloaders?.postsLoader.load(parent.id);
   };
 
-  static getManyResolver = async (
-    _parent,
-    _args,
-    { fastify, dataloaders }: IGraphqlContext,
-  ) => {
+  static getManyResolver = async (_parent, _args, { fastify }: IGraphqlContext) => {
     return fastify.prisma.post.findMany();
   };
 
   static createResolver = async (
     _parent,
     args: ICreatePostArgs,
-    { fastify, dataloaders }: IGraphqlContext,
+    { fastify }: IGraphqlContext,
   ) => {
     return fastify.prisma.post.create({
       data: args.dto,
@@ -155,7 +143,7 @@ class Post {
   static updateResolver = async (
     _parent,
     args: IUpdatePostArgs,
-    { fastify, dataloaders }: IGraphqlContext,
+    { fastify }: IGraphqlContext,
   ) => {
     return fastify.prisma.post.update({
       where: { id: args.id },
@@ -166,7 +154,7 @@ class Post {
   static deleteResolver = async (
     _parent,
     args: IPostTypeArgs,
-    { fastify, dataloaders }: IGraphqlContext,
+    { fastify }: IGraphqlContext,
   ) => {
     await fastify.prisma.post.delete({
       where: {

@@ -14,7 +14,7 @@ export interface IDataloaders {
 
 export interface IGraphqlContext {
   fastify: FastifyInstance;
-  dataloaders: IDataloaders;
+  dataloaders?: IDataloaders;
 }
 
 const createDataloaders = (fastify: FastifyInstance) => {

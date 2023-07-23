@@ -11,8 +11,6 @@ import { UUIDType } from './uuid.js';
 import { memberTypeId } from './memberTypeId.js';
 import { IMemberType, MemberType } from './memberTypeType.js';
 import { IUserType, User } from './userTypes.js';
-import DataLoader from 'dataloader';
-import { IPost } from './postTypes.js';
 import { IGraphqlContext } from '../dataloaders.js';
 
 export interface IProfile {
@@ -132,7 +130,7 @@ class Profile {
   static getResolver = async (
     _parent,
     args: IProfileTypeArgs,
-    { fastify, dataloaders }: IGraphqlContext,
+    { fastify }: IGraphqlContext,
   ) => {
     const profile = await fastify.prisma.profile.findUnique({
       where: {
@@ -142,11 +140,7 @@ class Profile {
     return profile;
   };
 
-  static getManyResolver = async (
-    _parent,
-    _args,
-    { fastify, dataloaders }: IGraphqlContext,
-  ) => {
+  static getManyResolver = async (_parent, _args, { fastify }: IGraphqlContext) => {
     return fastify.prisma.profile.findMany();
   };
 
@@ -155,13 +149,7 @@ class Profile {
     _args,
     { fastify, dataloaders }: IGraphqlContext,
   ) => {
-    return await dataloaders.profilesLoader.load(parent.id);
-    // const profile = await fastify.prisma.profile.findUnique({
-    //   where: {
-    //     userId: parent.id,
-    //   },
-    // });
-    // return profile;
+    return await dataloaders?.profilesLoader.load(parent.id);
   };
 
   static profileFromMemberTypeResolver = async (
@@ -179,7 +167,7 @@ class Profile {
   static createResolver = async (
     _parent,
     args: ICreateProfileArgs,
-    { fastify, dataloaders }: IGraphqlContext,
+    { fastify }: IGraphqlContext,
   ) => {
     return fastify.prisma.profile.create({
       data: args.dto,
@@ -189,7 +177,7 @@ class Profile {
   static updateResolver = async (
     _parent,
     args: IUpdateProfileArgs,
-    { fastify, dataloaders }: IGraphqlContext,
+    { fastify }: IGraphqlContext,
   ) => {
     return fastify.prisma.profile.update({
       where: { id: args.id },
@@ -200,7 +188,7 @@ class Profile {
   static deleteResolver = async (
     _parent,
     args: IProfileTypeArgs,
-    { fastify, dataloaders }: IGraphqlContext,
+    { fastify }: IGraphqlContext,
   ) => {
     await fastify.prisma.profile.delete({
       where: {
