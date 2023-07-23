@@ -12,14 +12,14 @@
 ### Tests:
 
 1. GraphQL queries
-   [x] `npm run test-queries` +144
+- [x] `npm run test-queries` +144
 2. GraphQL mutations
-   [x] `npm run test-mutations` +90
+- [x] `npm run test-mutations` +90
 3. Limited GraphQL queries length (max length **5**)
-   [x] `npm run test-rule` +18
+- [x] `npm run test-rule` +18
 4. Solved `n+1` QraphQL problem with **dataloader** package
-   [x] `npm run test-loader` +80
-   [x] `npm run test-loader-prime` +28
+- [x] `npm run test-loader` +80
+- [x] `npm run test-loader-prime` +28
 
 ### Implemented GaphQL Queries
 
