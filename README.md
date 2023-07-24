@@ -1,40 +1,213 @@
 ## Assignment: Graphql
-### Tasks:
-1. Add logic to the graphql endpoint: ./src/routes/graphql.  
-Constraints and logic for gql queries should be done based on restful implementation.  
-   1.1. npm run test-queries  
-   1.2. npm run test-mutations    
-2. Limit the complexity of the graphql queries by their depth with [graphql-depth-limit](https://www.npmjs.com/package/graphql-depth-limit) package.  
-   Use value "5" for package.  
-   2.1. npm run test-rule  
-3. Solve `n+1` graphql problem with [dataloader](https://www.npmjs.com/package/dataloader).  
-   You can use only one "findMany" call per loader to consider this task completed.  
-   3.1. npm run test-loader  
-   3.2. npm run test-loader-prime  
-   When you query all users, you don't have to use the database again when you want to find subs.  
-   Pre-place users in the appropriate dataloader cache.  
-   To determine if a user is a sub you need to do the appropriate join ([include](https://www.prisma.io/docs/reference/api-reference/prisma-client-reference#include)).  
-   But only do a join when you need it. You can use [graphql-parse-resolve-info](https://github.com/graphile/graphile-engine/tree/master/packages/graphql-parse-resolve-info) package to parse GraphQLResolveInfo to determine if subs are expected in the response.  
 
-### Info:  
-It is forbidden to add new npm dependencies.  
-You should only modify/add the code inside the folder ./src/routes/graphql.  
-You are responsible for using style configs that are in the repository.  
-Make sure the important files have not been changed: npm run test-integrity.  
-If the test was partially completed, then it is considered not completed.  
-If the one test was not completed, then the subsequent ones are considered not completed.  
-You are free to use schema-first or stick to the [default code-first](https://github.dev/graphql/graphql-js/blob/ffa18e9de0ae630d7e5f264f72c94d497c70016b/src/__tests__/starWarsSchema.ts).  
+### To start testing:
 
-Steps to get started:
 1. Install dependencies: npm ci
-2. Create .env file (based on .env.example): ./.env
-3. Create db file: ./prisma/database.db
+2. Create .env file (rename .env.example): ./.env
+3. Create empty db file: ./prisma/database.db
 4. Apply pending migrations: npx prisma migrate deploy
 5. Seed db: npx prisma db seed
-6. Start server: npm run start
+6. Run the tests **below**
 
-Useful things:
-- Database GUI: npx prisma studio
-- Tests modify the db, so if it seems to you that the db has become too large,
-  you can clear it: npx prisma migrate reset (also triggers seeding)
-- Swagger: /docs
+### Tests:
+
+1. GraphQL queries
+
+- [x] `npm run test-queries` +144
+
+2. GraphQL mutations
+
+- [x] `npm run test-mutations` +90
+
+3. Limited GraphQL queries length (max length **5**)
+
+- [x] `npm run test-rule` +18
+
+4. Solved `n+1` QraphQL problem with **dataloader** package
+
+- [x] `npm run test-loader` +80
+- [x] `npm run test-loader-prime` +28
+
+### Implemented GaphQL Queries
+
+1. **Users**
+   **Query:**
+
+```
+users {
+   id
+   name
+   balance
+   profile {}
+   posts {}
+   userSubscribedTo {
+      id
+      name
+      balance
+   }
+   subscribedToUser {
+      id
+      name
+      balance
+   }
+}
+```
+
+**Variables:**
+
+`userId: UUID!`
+
+2. **Posts**
+   **Query:**
+
+```
+posts {
+   id
+   title
+   content
+}
+```
+
+**Variables:**
+`$postId: UUID!`
+
+3. **Profiles**
+   **Query:**
+
+```
+profiles {
+   id
+   isMale
+   yearOfBirth
+   memberTypes {}
+}
+```
+
+**Variables:**
+`$profileId: UUID!`
+
+4. **MemberTypes**
+   **Query:**
+
+```
+memberTypes {
+   id
+   discount
+   postsLimitPerMonth
+}
+```
+
+**Variables:**
+`$memberTypeId: MemberTypeId!`
+
+### Implemented GraphQL mutations
+
+**Create:**
+
+```
+mutation ($postDto: CreatePostInput!, $userDto: CreateUserInput!, $profileDto: CreateProfileInput!) {
+   createPost(dto: $postDto) {
+      id
+   }
+   createUser(dto: $userDto) {
+      id
+   }
+   createProfile(dto: $profileDto) {
+      id
+   }
+}
+```
+
+_CreateUserInput!_:
+
+```
+{
+   "name": string!,
+   "balance": float!
+}
+```
+
+_CreateProfileInput!_
+
+```
+{
+   "isMale": boolean!,
+   "yearOfBirth": integer!,
+   "userId": string!,
+   "memberTypeId": memberTypeId!
+}
+```
+
+_CreatePostInput_
+
+```
+{
+   "title": string!,
+   "content": string!,
+   "authorId": string!
+}
+```
+
+**Update:**
+
+```
+mutation ($postId: UUID!, $postDto: ChangePostInput!, $profileId: UUID!, $profileDto: ChangeProfileInput!, $userId: UUID!, $userDto: ChangeUserInput!) {
+   changePost(id: $postId, dto: $postDto) {
+      id
+   }
+   changeProfile(id: $profileId, dto: $profileDto) {
+      id
+   }
+   changeUser(id: $userId, dto: $userDto) {
+      id
+   }
+}
+```
+
+_ChangeUserInput!_
+
+```
+{
+   "name": string,
+   "balance": float
+}
+```
+
+_ChangeProfileInput!_
+
+```
+{
+   "isMale": boolean,
+   "yearOfBirth": integer
+}
+```
+
+_ChangePostInput!_
+
+```
+{
+   "title": string,
+   "content": string
+}
+```
+
+**Delete:**
+
+```
+mutation ($userId: UUID!, $profileId: UUID!, $postId: UUID!) {
+   deletePost(id: $postId)
+   deleteProfile(id: $profileId)
+   deleteUser(id: $userId)
+}
+```
+
+**Subscribe/unsubscribe**
+
+```
+mutation ($userId1: UUID!, $authorId1: UUID!, $userId2: UUID!, $authorId2: UUID!) {
+   subscribeTo(userId: $userId1, authorId: $authorId1) {
+      id
+   }
+   unsubscribeFrom(userId: $userId2, authorId: $authorId2)
+}
+```
