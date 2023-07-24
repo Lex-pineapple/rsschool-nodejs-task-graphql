@@ -12,12 +12,19 @@
 ### Tests:
 
 1. GraphQL queries
+
 - [x] `npm run test-queries` +144
+
 2. GraphQL mutations
+
 - [x] `npm run test-mutations` +90
+
 3. Limited GraphQL queries length (max length **5**)
+
 - [x] `npm run test-rule` +18
+
 4. Solved `n+1` QraphQL problem with **dataloader** package
+
 - [x] `npm run test-loader` +80
 - [x] `npm run test-loader-prime` +28
 
@@ -111,6 +118,36 @@ mutation ($postDto: CreatePostInput!, $userDto: CreateUserInput!, $profileDto: C
 }
 ```
 
+_CreateUserInput!_:
+
+```
+{
+   "name": string!,
+   "balance": float!
+}
+```
+
+_CreateProfileInput!_
+
+```
+{
+   "isMale": boolean!,
+   "yearOfBirth": integer!,
+   "userId": string!,
+   "memberTypeId": memberTypeId!
+}
+```
+
+_CreatePostInput_
+
+```
+{
+   "title": string!,
+   "content": string!,
+   "authorId": string!
+}
+```
+
 **Update:**
 
 ```
@@ -124,6 +161,33 @@ mutation ($postId: UUID!, $postDto: ChangePostInput!, $profileId: UUID!, $profil
    changeUser(id: $userId, dto: $userDto) {
       id
    }
+}
+```
+
+_ChangeUserInput!_
+
+```
+{
+   "name": string,
+   "balance": float
+}
+```
+
+_ChangeProfileInput!_
+
+```
+{
+   "isMale": boolean,
+   "yearOfBirth": integer
+}
+```
+
+_ChangePostInput!_
+
+```
+{
+   "title": string,
+   "content": string
 }
 ```
 
